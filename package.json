@@ -1,0 +1,39 @@
+{
+  "name": "doc-agent",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "ingest": "tsx src/ingest.ts",
+    "query": "tsx src/query.ts",
+    "dev": "tsx watch src/server.ts",
+    "start": "tsx src/server.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^25.5.2",
+    "tsx": "^4.21.0",
+    "typescript": "^6.0.2"
+  },
+  "dependencies": {
+    "@langchain/community": "^0.3.31",
+    "@langchain/core": "^0.3.79",
+    "@langchain/openai": "^0.6.0",
+    "@langchain/textsplitters": "^0.1.0",
+    "dotenv": "^17.4.0",
+    "express": "^5.2.1",
+    "langchain": "^0.3.37",
+    "openai": "^6.33.0",
+    "undici": "^7.24.7",
+    "zod": "^4.3.6"
+  },
+  "optionalDependencies": {
+    "hnswlib-node": "^3.0.0"
+  },
+  "type": "module"
+}
