@@ -2,3 +2,5 @@
 .env
 vector-store/
 .DS_Store
+
+.env.example
