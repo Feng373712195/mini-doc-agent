@@ -1,0 +1,69 @@
+:root {
+  --bg: #0b1020;
+  --panel: rgba(255, 255, 255, 0.06);
+  --panel2: rgba(255, 255, 255, 0.08);
+  --text: rgba(255, 255, 255, 0.92);
+  --muted: rgba(255, 255, 255, 0.68);
+  --border: rgba(255, 255, 255, 0.10);
+  --accent: #79a6ff;
+  --accent2: #8bf0ff;
+}
+
+html,
+body,
+#__nuxt {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  color: var(--text);
+  background:
+    radial-gradient(1200px 600px at 15% 10%, rgba(121, 166, 255, 0.18), transparent 60%),
+    radial-gradient(900px 520px at 90% 0%, rgba(139, 240, 255, 0.14), transparent 55%),
+    linear-gradient(180deg, #070a14 0%, #0b1020 60%, #070a14 100%);
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans",
+    "Liberation Sans", sans-serif;
+}
+
+.glass {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(10px);
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.chat-bubble {
+  padding: 12px 14px;
+  border-radius: 14px;
+  line-height: 1.55;
+  border: 1px solid var(--border);
+}
+
+.bubble-user {
+  background: rgba(121, 166, 255, 0.18);
+}
+
+.bubble-assistant {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.msg-md pre {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 10px 12px;
+  border-radius: 12px;
+  overflow: auto;
+}
+
+.msg-md code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+.cv-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 160px;
+}
