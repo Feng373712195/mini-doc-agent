@@ -1,4 +1,4 @@
-import { insertMessage, setConversationTitle } from "~/server/utils/db";
+import { insertMessage, setConversationTitle } from "~~/server/utils/db";
 import { createError, defineEventHandler, getRouterParam, readBody } from "h3";
 
 export default defineEventHandler(async (event) => {

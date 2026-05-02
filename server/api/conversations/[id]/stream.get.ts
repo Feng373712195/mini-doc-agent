@@ -1,6 +1,7 @@
-import { getLatestUserMessage, getMessages, updateMessageContent } from "~/server/utils/db";
-import { retrieveContexts } from "~/server/utils/rag/retrieve";
-import { streamChatText } from "~/server/utils/llm/chat";
+import { getLatestUserMessage, getMessages, updateMessageContent } from "~~/server/utils/db";
+import { retrieveContexts } from "~~/server/utils/rag/retrieve";
+import { streamChatText } from "~~/server/utils/llm/chat";
+import type { Message } from "~~/shared/chat";
 import {
   createError,
   defineEventHandler,
@@ -54,7 +55,7 @@ export default defineEventHandler(async (event) => {
   sseWrite(res, "message_start", { assistantMessageId, contexts: matches });
 
   // Seed assistant content from DB in case of reconnect.
-  const existing = getMessages(conversationId).find((m) => m.id === assistantMessageId);
+  const existing = getMessages(conversationId).find((m: Message) => m.id === assistantMessageId);
   let fullText = existing?.content || "";
 
   let lastFlushAt = 0;

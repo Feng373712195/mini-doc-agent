@@ -1,4 +1,4 @@
-import { createConversation } from "~/server/utils/db";
+import { createConversation } from "~~/server/utils/db";
 import { defineEventHandler, readBody } from "h3";
 
 export default defineEventHandler(async (event) => {
