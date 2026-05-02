@@ -8,23 +8,12 @@
       class="glass"
       :style="{ borderRight: '1px solid var(--border)' }"
     >
-      <div :style="{ padding: '14px 12px' }">
-        <div :style="{ display: 'flex', alignItems: 'center', gap: '10px' }">
-          <div
-            :style="{
-              width: '34px',
-              height: '34px',
-              borderRadius: '12px',
-              background: 'linear-gradient(135deg, var(--accent), var(--accent2))',
-            }"
-          />
-          <div v-if="!collapsed">
-            <div :style="{ fontSize: '16px', fontWeight: 700 }">Mini Doc Agent</div>
-            <div class="muted" :style="{ fontSize: '12px' }">RAG + Stream</div>
-          </div>
+      <div :style="{ padding: '16px 12px' }">
+        <div v-if="!collapsed" :style="{ fontSize: '18px', fontWeight: 600, marginBottom: '16px' }">
+          Mini Doc Agent
         </div>
 
-        <div :style="{ marginTop: '14px', display: 'grid', gap: '10px' }">
+        <div :style="{ display: 'grid', gap: '10px' }">
           <a-button data-testid="new-chat" type="primary" block @click="onNewChat">New chat</a-button>
           <a-input v-if="!collapsed" v-model:value="search" placeholder="Search chats" allow-clear />
         </div>
@@ -69,16 +58,13 @@
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: '0 18px',
+          padding: '0 24px',
           height: '64px',
           flexShrink: 0,
         }"
       >
-        <div>
-          <div :style="{ fontSize: '16px', fontWeight: 700 }">
-            {{ activeTitle || "Chat" }}
-          </div>
-          <div class="muted" :style="{ fontSize: '12px' }">Streaming + Virtualized</div>
+        <div :style="{ fontSize: '16px', fontWeight: 600 }">
+          {{ activeTitle || "Chat" }}
         </div>
         <a-button v-if="!follow" @click="scrollToBottom">Back to bottom</a-button>
       </a-layout-header>
