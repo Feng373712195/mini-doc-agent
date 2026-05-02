@@ -53,6 +53,11 @@
 - 修复 API 路由：修复 `serverDir` 配置，解决 `/api/conversations` 404
 - 修复布局高度问题：将 Grid 布局改为 Flexbox 三段式布局，确保输入框始终可见且固定在底部（已完成）
 - UI 简化：移除 logo 和副标题，简化界面，整体风格向 ChatGPT 靠拢（已完成）
+- 设计系统重构：按照 DESIGN.md 的 Verdana Health 设计系统重新设计页面样式（已完成）
+  - 应用统一的配色方案（Primary Navy #0F172A, Background #F8FAFC）
+  - 使用 8px 基础间距系统和规范的圆角、阴影
+  - 输入框采用 ChatGPT 风格：居中布局、卡片式设计、focus 状态
+  - 整体风格更加简洁、专业、易读
 
 ## 已知问题
 
