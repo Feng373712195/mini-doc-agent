@@ -8,7 +8,7 @@ export default defineNuxtConfig({
   // 注意：serverDir 是相对仓库根目录（rootDir）的路径。
   serverDir: "server",
   devtools: { enabled: true },
-  css: ["ant-design-vue/dist/reset.css", "~/assets/app.css"],
+  css: ["ant-design-vue/dist/reset.css", "~/assets/styles/app.less"],
   app: {
     head: {
       title: "Mini Doc Agent",

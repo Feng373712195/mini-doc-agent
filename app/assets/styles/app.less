@@ -1,0 +1,104 @@
+/* Verdana Health Design System - Global Styles */
+
+/* ==================== Variables ==================== */
+@primary-navy: #0F172A;
+@secondary-slate: #64748B;
+@tertiary-sage: #059669;
+@background: #F8FAFC;
+@surface: #FFFFFF;
+@border-default: #E2E8F0;
+@border-hover: #CBD5E1;
+@text-primary: #0F172A;
+@text-secondary: #475569;
+@text-muted: #64748B;
+
+/* Spacing (8px base) */
+@space-xs: 4px;
+@space-sm: 8px;
+@space-md: 16px;
+@space-lg: 24px;
+@space-xl: 32px;
+@space-2xl: 48px;
+
+/* Border Radius */
+@radius-sm: 4px;
+@radius-default: 8px;
+@radius-md: 12px;
+@radius-lg: 16px;
+
+/* Shadows */
+@shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.03);
+@shadow-default: 0 2px 6px rgba(15, 23, 42, 0.05);
+@shadow-md: 0 4px 16px rgba(15, 23, 42, 0.07);
+@shadow-lg: 0 8px 32px rgba(15, 23, 42, 0.10);
+
+/* ==================== Global Base Styles ==================== */
+html,
+body,
+#__nuxt {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  color: @text-primary;
+  background: @background;
+  font-family: 'DM Sans', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+/* ==================== Global Component Styles ==================== */
+
+/* Chat bubble - 公共组件样式 */
+.chat-bubble {
+  padding: @space-md;
+  border-radius: @radius-default;
+  line-height: 1.6;
+  box-shadow: @shadow-sm;
+}
+
+.bubble-user {
+  background: @primary-navy;
+  color: @surface;
+}
+
+.bubble-assistant {
+  background: @surface;
+  border: 1px solid @border-default;
+  color: @text-primary;
+}
+
+/* Message markdown - 公共样式 */
+.msg-md {
+  color: @text-primary;
+
+  pre {
+    background: @primary-navy;
+    border: 1px solid @border-default;
+    padding: @space-md;
+    border-radius: @radius-default;
+    overflow: auto;
+    color: @surface;
+  }
+
+  code {
+    font-family: 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 14px;
+  }
+}
+
+/* Content visibility optimization */
+.cv-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 160px;
+}
+
+/* ==================== Utility Classes ==================== */
+.text-muted {
+  color: @text-muted;
+}
+
+.text-secondary {
+  color: @text-secondary;
+}

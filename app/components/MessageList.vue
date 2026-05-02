@@ -1,10 +1,10 @@
 <template>
   <div ref="parentRef" class="message-list" @scroll="onScroll">
-    <div class="px-4 max-w-3xl mx-auto w-full">
+    <div class="message-list-inner">
       <div
         v-for="m in messages"
         :key="m.id"
-        class="cv-auto py-4"
+        class="cv-auto message-item"
       >
         <MessageBubble :role="m.role" :content="m.content" />
       </div>
@@ -95,11 +95,25 @@ function setScrollTop(value: number) {
 defineExpose({ scrollToBottom, getScrollMetrics, setScrollTop });
 </script>
 
-<style scoped>
+<style lang="less" scoped>
+@import "~/assets/styles/app.less";
+
 .message-list {
   height: 100%;
   overflow: auto;
-  border-radius: var(--radius-lg);
+  border-radius: @radius-lg;
   background: transparent;
+}
+
+.message-list-inner {
+  padding: @space-md;
+  box-sizing: border-box;
+  max-width: 768px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.message-item {
+  padding: @space-md 0;
 }
 </style>

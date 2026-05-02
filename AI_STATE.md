@@ -47,29 +47,7 @@
 
 ## 最近变更（摘要）
 
-- 结构调整：将前端代码迁移到 `app/` 目录，并通过 `srcDir` 启用（保持 `server/` 在仓库根目录）
-- 修复构建问题：修复了组件内重复 `defineExpose()` 导致的构建失败与 dev 500（IPC closed）
-- 修复类型检查：在 server routes 中使用 `~~/` 根别名，避免 `srcDir` 变更后 TS 路径解析失败
-- 修复 API 路由：修复 `serverDir` 配置，解决 `/api/conversations` 404
-- 修复布局高度问题：将 Grid 布局改为 Flexbox 三段式布局，确保输入框始终可见且固定在底部（已完成）
-- UI 简化：移除 logo 和副标题，简化界面，整体风格向 ChatGPT 靠拢（已完成）
-- 设计系统重构：按照 DESIGN.md 的 Verdana Health 设计系统重新设计页面样式（已完成）
-  - 应用统一的配色方案（Primary Navy #0F172A, Background #F8FAFC）
-  - 使用 8px 基础间距系统和规范的圆角、阴影
-  - 输入框采用 ChatGPT 风格：居中布局、卡片式设计、focus 状态
-  - 整体风格更加简洁、专业、易读
-- 代码规范重构：完全移除内联样式，改用 CSS class（已完成）
-  - 所有样式统一管理在 app.css 中
-  - 修复 logo 和对话列表文字显示问题
-  - 使用自定义 SVG 图标替换默认侧边栏折叠按钮
-  - 符合 AGENTS.md 样式规范要求
-- 样式架构重构：引入 Tailwind CSS 并重构样式分层（已完成）
-  - 安装并配置 Tailwind CSS + PostCSS + Autoprefixer
-  - Tailwind 用于布局（flex, grid, spacing, sizing）
-  - app.css 只保留全局样式和公共组件样式
-  - 组件特定样式放在各自的 `<style scoped>` 中
-  - 完全符合更新后的 rules/style.md 规范
-  - 修复主内容区布局问题，确保三段式布局正确显示
+
 
 ## 已知问题
 

@@ -1,5 +1,5 @@
 <template>
-  <div class="max-w-3xl mx-auto w-full">
+  <div class="composer-wrapper">
     <div class="composer-container">
       <a-textarea
         data-testid="composer-input"
@@ -10,14 +10,14 @@
         @keydown.enter.exact.prevent="onSend"
         class="composer-textarea"
       />
-      <div class="flex justify-between items-center px-3 py-2 border-t border-border-default">
-        <span class="text-xs text-muted">Enter 发送，Shift+Enter 换行</span>
-        <div class="flex gap-2">
+      <div class="composer-footer">
+        <span class="composer-hint">Enter 发送，Shift+Enter 换行</span>
+        <div class="composer-actions">
           <a-button 
             v-if="streaming" 
             danger 
             @click="$emit('stop')"
-            class="h-9 px-4 text-sm rounded-lg"
+            class="btn-stop"
           >
             停止
           </a-button>
@@ -26,7 +26,7 @@
             type="primary" 
             :loading="sending" 
             @click="onSend"
-            class="btn-primary"
+            class="btn-send"
           >
             发送
           </a-button>
@@ -56,22 +56,30 @@ function onSend() {
 }
 </script>
 
-<style scoped>
+<style lang="less" scoped>
+@import "~/assets/styles/app.less";
+
+.composer-wrapper {
+  max-width: 768px;
+  margin: 0 auto;
+  width: 100%;
+}
+
 .composer-container {
-  background: var(--surface);
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-default);
+  background: @surface;
+  border: 1px solid @border-default;
+  border-radius: @radius-md;
+  box-shadow: @shadow-default;
   transition: all 150ms ease;
-}
 
-.composer-container:hover {
-  border-color: var(--border-hover);
-}
+  &:hover {
+    border-color: @border-hover;
+  }
 
-.composer-container:focus-within {
-  border-color: var(--primary-navy);
-  box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.08), var(--shadow-default);
+  &:focus-within {
+    border-color: @primary-navy;
+    box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.08), @shadow-default;
+  }
 }
 
 .composer-textarea {
@@ -81,12 +89,37 @@ function onSend() {
   resize: none;
 }
 
-.btn-primary {
+.composer-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: @space-sm @space-md;
+  border-top: 1px solid @border-default;
+}
+
+.composer-hint {
+  font-size: 12px;
+  color: @text-muted;
+}
+
+.composer-actions {
+  display: flex;
+  gap: @space-sm;
+}
+
+.btn-stop {
+  height: 36px;
+  padding: 0 16px;
+  font-size: 14px;
+  border-radius: @radius-default;
+}
+
+.btn-send {
   height: 36px;
   padding: 0 20px;
   font-size: 14px;
-  border-radius: var(--radius-default);
-  background: var(--primary-navy);
-  border-color: var(--primary-navy);
+  border-radius: @radius-default;
+  background: @primary-navy;
+  border-color: @primary-navy;
 }
 </style>

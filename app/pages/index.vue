@@ -1,5 +1,5 @@
 <template>
-  <a-layout class="h-full">
+  <a-layout class="app-layout">
     <a-layout-sider
       width="280"
       :collapsed-width="72"
@@ -8,12 +8,12 @@
       class="sidebar"
       :trigger="null"
     >
-      <div class="p-6">
+      <div class="sidebar-header">
         <div v-if="!collapsed" class="sidebar-title">
           Mini Doc Agent
         </div>
 
-        <div class="grid gap-2">
+        <div class="sidebar-actions">
           <a-button 
             data-testid="new-chat" 
             type="primary" 
@@ -33,7 +33,7 @@
         </div>
       </div>
 
-      <div class="px-2 pb-3">
+      <div class="sidebar-list">
         <a-list
           :data-source="filteredConversations"
           size="small"
@@ -44,7 +44,7 @@
               :class="['conversation-item', { active: item.id === activeConversationId }]"
               @click="selectConversation(item.id)"
             >
-              <div class="w-full">
+              <div class="conversation-item-content">
                 <div class="conversation-title">{{ item.title }}</div>
                 <div class="conversation-time">{{ formatTime(item.updatedAt) }}</div>
               </div>
@@ -58,7 +58,7 @@
         @click="collapsed = !collapsed"
         v-if="!collapsed"
       >
-        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg class="sidebar-trigger-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M15 18l-6-6 6-6" />
         </svg>
       </div>
@@ -67,13 +67,13 @@
         @click="collapsed = !collapsed"
         v-else
       >
-        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg class="sidebar-trigger-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M9 18l6-6-6-6" />
         </svg>
       </div>
     </a-layout-sider>
 
-    <a-layout class="flex flex-col">
+    <a-layout class="main-layout">
       <a-layout-header class="main-header">
         <div class="main-header-title">
           {{ activeTitle || "Chat" }}
@@ -81,7 +81,7 @@
         <a-button 
           v-if="!follow" 
           @click="scrollToBottom"
-          class="h-9 text-sm rounded-lg"
+          class="btn-back"
         >
           Back to bottom
         </a-button>
@@ -97,14 +97,14 @@
           :hasMoreOlder="hasMoreOlder"
           @followChange="follow = $event"
           @loadOlder="loadOlder"
-          class="flex-grow min-h-0"
+          class="message-list-wrapper"
         />
         <Composer 
           :sending="sending" 
           :streaming="streaming" 
           @send="sendMessage" 
           @stop="stopStream" 
-          class="flex-shrink-0"
+          class="composer-wrapper-outer"
         />
       </a-layout-content>
     </a-layout>
@@ -331,65 +331,94 @@ onMounted(async () => {
 });
 </script>
 
-<style scoped>
+<style lang="less" scoped>
+@import "~/assets/styles/app.less";
+
+/* Layout */
+.app-layout {
+  height: 100%;
+}
+
+.main-layout {
+  display: flex;
+  flex-direction: column;
+}
+
 /* Sidebar */
 .sidebar {
-  background: var(--surface);
-  border-right: 1px solid var(--border-default);
+  background: @surface;
+  border-right: 1px solid @border-default;
+
+  :deep(.ant-list) {
+    background: transparent;
+  }
+}
+
+.sidebar-header {
+  padding: @space-lg @space-md;
 }
 
 .sidebar-title {
   font-size: 20px;
   font-weight: 600;
-  margin-bottom: var(--space-lg);
+  margin-bottom: @space-lg;
   font-family: 'Plus Jakarta Sans', sans-serif;
-  color: var(--text-primary);
+  color: @text-primary;
 }
 
-.sidebar :deep(.ant-list) {
-  background: transparent;
+.sidebar-actions {
+  display: grid;
+  gap: @space-sm;
+}
+
+.sidebar-list {
+  padding: 0 @space-sm @space-md;
 }
 
 /* Conversation item */
 .conversation-item {
-  border-radius: var(--radius-default);
-  margin: var(--space-xs) 0;
-  padding: var(--space-sm) var(--space-md);
+  border-radius: @radius-default;
+  margin: @space-xs 0;
+  padding: @space-sm @space-md;
   cursor: pointer;
   border: 1px solid transparent;
   background: transparent;
   transition: all 150ms ease;
+
+  &:hover {
+    background: rgba(15, 23, 42, 0.03);
+  }
+
+  &.active {
+    border-color: @primary-navy;
+    background: rgba(15, 23, 42, 0.06);
+  }
 }
 
-.conversation-item:hover {
-  background: rgba(15, 23, 42, 0.03);
-}
-
-.conversation-item.active {
-  border-color: var(--primary-navy);
-  background: rgba(15, 23, 42, 0.06);
+.conversation-item-content {
+  width: 100%;
 }
 
 .conversation-title {
   font-weight: 500;
   font-size: 14px;
-  color: var(--text-primary);
-  margin-bottom: var(--space-xs);
+  color: @text-primary;
+  margin-bottom: @space-xs;
 }
 
 .conversation-time {
   font-size: 12px;
-  color: var(--text-muted);
+  color: @text-muted;
 }
 
 /* Main header */
 .main-header {
-  background: var(--surface);
-  border-bottom: 1px solid var(--border-default);
+  background: @surface;
+  border-bottom: 1px solid @border-default;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 var(--space-lg);
+  padding: 0 @space-lg;
   height: 64px;
   flex-shrink: 0;
 }
@@ -398,7 +427,7 @@ onMounted(async () => {
   font-size: 16px;
   font-weight: 600;
   font-family: 'Plus Jakarta Sans', sans-serif;
-  color: var(--text-primary);
+  color: @text-primary;
 }
 
 /* Main content */
@@ -407,9 +436,18 @@ onMounted(async () => {
   flex-direction: column;
   flex-grow: 1;
   min-height: 0;
-  padding: var(--space-lg);
-  gap: var(--space-lg);
-  background: var(--background);
+  padding: @space-lg;
+  gap: @space-lg;
+  background: @background;
+}
+
+.message-list-wrapper {
+  flex-grow: 1;
+  min-height: 0;
+}
+
+.composer-wrapper-outer {
+  flex-shrink: 0;
 }
 
 /* Buttons */
@@ -417,14 +455,20 @@ onMounted(async () => {
   height: 42px;
   font-size: 14px;
   font-weight: 500;
-  border-radius: var(--radius-default);
-  background: var(--primary-navy);
-  border-color: var(--primary-navy);
+  border-radius: @radius-default;
+  background: @primary-navy;
+  border-color: @primary-navy;
+}
+
+.btn-back {
+  height: 36px;
+  font-size: 14px;
+  border-radius: @radius-default;
 }
 
 .input-search {
   height: 42px;
-  border-radius: var(--radius-default);
+  border-radius: @radius-default;
 }
 
 /* Sidebar trigger */
@@ -437,17 +481,22 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--surface);
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-default);
+  background: @surface;
+  border: 1px solid @border-default;
+  border-radius: @radius-default;
   cursor: pointer;
   transition: all 150ms ease;
   z-index: 10;
-  color: var(--text-primary);
+  color: @text-primary;
+
+  &:hover {
+    background: @background;
+    border-color: @border-hover;
+  }
 }
 
-.sidebar-trigger:hover {
-  background: var(--background);
-  border-color: var(--border-hover);
+.sidebar-trigger-icon {
+  width: 16px;
+  height: 16px;
 }
 </style>
