@@ -87,7 +87,7 @@
         </a-button>
       </a-layout-header>
 
-      <a-layout-content class="flex flex-col flex-grow min-h-0 p-6 gap-6 bg-background">
+      <a-layout-content class="main-content">
         <MessageList
           ref="listRef"
           data-testid="message-list"
@@ -399,6 +399,17 @@ onMounted(async () => {
   font-weight: 600;
   font-family: 'Plus Jakarta Sans', sans-serif;
   color: var(--text-primary);
+}
+
+/* Main content */
+.main-content {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  min-height: 0;
+  padding: var(--space-lg);
+  gap: var(--space-lg);
+  background: var(--background);
 }
 
 /* Buttons */
