@@ -61,7 +61,7 @@
       </div>
     </a-layout-sider>
 
-    <a-layout>
+    <a-layout :style="{ display: 'flex', flexDirection: 'column' }">
       <a-layout-header
         :style="{
           background: 'transparent',
@@ -70,6 +70,8 @@
           alignItems: 'center',
           justifyContent: 'space-between',
           padding: '0 18px',
+          height: '64px',
+          flexShrink: 0,
         }"
       >
         <div>
@@ -81,7 +83,7 @@
         <a-button v-if="!follow" @click="scrollToBottom">Back to bottom</a-button>
       </a-layout-header>
 
-      <a-layout-content :style="{ padding: '16px', height: 'calc(100vh - 64px)', display: 'grid', gridTemplateRows: '1fr auto', gap: '12px' }">
+      <a-layout-content :style="{ display: 'flex', flexDirection: 'column', flexGrow: 1, minHeight: 0, padding: '16px', gap: '12px' }">
         <MessageList
           ref="listRef"
           data-testid="message-list"
@@ -91,8 +93,9 @@
           :hasMoreOlder="hasMoreOlder"
           @followChange="follow = $event"
           @loadOlder="loadOlder"
+          :style="{ flexGrow: 1, minHeight: 0 }"
         />
-        <Composer :sending="sending" :streaming="streaming" @send="sendMessage" @stop="stopStream" />
+        <Composer :sending="sending" :streaming="streaming" @send="sendMessage" @stop="stopStream" :style="{ flexShrink: 0 }" />
       </a-layout-content>
     </a-layout>
   </a-layout>
