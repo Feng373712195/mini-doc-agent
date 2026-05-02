@@ -1,37 +1,25 @@
 <template>
-  <a-layout :style="{ height: '100%' }">
+  <a-layout class="app-layout">
     <a-layout-sider
       width="280"
       :collapsed-width="72"
       collapsible
       v-model:collapsed="collapsed"
       class="sidebar"
+      :trigger="null"
     >
-      <div :style="{ padding: 'var(--space-lg) var(--space-md)' }">
-        <div v-if="!collapsed" :style="{ 
-          fontSize: '20px', 
-          fontWeight: 600, 
-          marginBottom: 'var(--space-lg)',
-          fontFamily: 'Plus Jakarta Sans, sans-serif',
-          color: 'var(--text-primary)',
-        }">
+      <div class="sidebar-header">
+        <div v-if="!collapsed" class="sidebar-title">
           Mini Doc Agent
         </div>
 
-        <div :style="{ display: 'grid', gap: 'var(--space-sm)' }">
+        <div class="sidebar-actions">
           <a-button 
             data-testid="new-chat" 
             type="primary" 
             block 
             @click="onNewChat"
-            :style="{
-              height: '42px',
-              fontSize: '14px',
-              fontWeight: 500,
-              borderRadius: 'var(--radius-default)',
-              background: 'var(--primary-navy)',
-              borderColor: 'var(--primary-navy)',
-            }"
+            class="btn-new-chat"
           >
             New chat
           </a-button>
@@ -40,96 +28,66 @@
             v-model:value="search" 
             placeholder="Search chats" 
             allow-clear
-            :style="{
-              height: '42px',
-              borderRadius: 'var(--radius-default)',
-            }"
+            class="input-search"
           />
         </div>
       </div>
 
-      <div :style="{ padding: '0 var(--space-sm) var(--space-md)' }">
+      <div class="sidebar-list">
         <a-list
           :data-source="filteredConversations"
           size="small"
           :split="false"
-          :style="{ background: 'transparent' }"
         >
           <template #renderItem="{ item }">
             <a-list-item
-              :style="{
-                borderRadius: 'var(--radius-default)',
-                margin: 'var(--space-xs) 0',
-                padding: 'var(--space-sm) var(--space-md)',
-                cursor: 'pointer',
-                border: item.id === activeConversationId ? '1px solid var(--primary-navy)' : '1px solid transparent',
-                background: item.id === activeConversationId ? 'rgba(15, 23, 42, 0.06)' : 'transparent',
-                transition: 'all 150ms ease',
-              }"
+              :class="['conversation-item', { active: item.id === activeConversationId }]"
               @click="selectConversation(item.id)"
             >
-              <div :style="{ width: '100%' }">
-                <div :style="{ 
-                  fontWeight: 500, 
-                  fontSize: '14px',
-                  color: 'var(--text-primary)',
-                  marginBottom: 'var(--space-xs)',
-                }">
-                  {{ item.title }}
-                </div>
-                <div class="text-muted" :style="{ fontSize: '12px' }">
-                  {{ formatTime(item.updatedAt) }}
-                </div>
+              <div class="conversation-item-content">
+                <div class="conversation-title">{{ item.title }}</div>
+                <div class="conversation-time">{{ formatTime(item.updatedAt) }}</div>
               </div>
             </a-list-item>
           </template>
         </a-list>
       </div>
+
+      <div 
+        class="sidebar-trigger" 
+        @click="collapsed = !collapsed"
+        v-if="!collapsed"
+      >
+        <svg class="sidebar-trigger-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M15 18l-6-6 6-6" />
+        </svg>
+      </div>
+      <div 
+        class="sidebar-trigger" 
+        @click="collapsed = !collapsed"
+        v-else
+      >
+        <svg class="sidebar-trigger-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 18l6-6-6-6" />
+        </svg>
+      </div>
     </a-layout-sider>
 
-    <a-layout :style="{ display: 'flex', flexDirection: 'column' }">
-      <a-layout-header
-        :style="{
-          background: 'var(--surface)',
-          borderBottom: '1px solid var(--border-default)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '0 var(--space-lg)',
-          height: '64px',
-          flexShrink: 0,
-        }"
-      >
-        <div :style="{ 
-          fontSize: '16px', 
-          fontWeight: 600,
-          fontFamily: 'Plus Jakarta Sans, sans-serif',
-          color: 'var(--text-primary)',
-        }">
+    <a-layout class="main-layout">
+      <a-layout-header class="main-header">
+        <div class="main-header-title">
           {{ activeTitle || "Chat" }}
         </div>
         <a-button 
           v-if="!follow" 
           @click="scrollToBottom"
-          :style="{
-            height: '36px',
-            fontSize: '14px',
-            borderRadius: 'var(--radius-default)',
-          }"
+          class="btn-secondary"
         >
           Back to bottom
         </a-button>
       </a-layout-header>
 
-      <a-layout-content :style="{ 
-        display: 'flex', 
-        flexDirection: 'column', 
-        flexGrow: 1, 
-        minHeight: 0, 
-        padding: 'var(--space-lg)', 
-        gap: 'var(--space-lg)',
-        background: 'var(--background)',
-      }">
+      <a-layout-content class="main-content">
         <MessageList
           ref="listRef"
           data-testid="message-list"
@@ -139,9 +97,15 @@
           :hasMoreOlder="hasMoreOlder"
           @followChange="follow = $event"
           @loadOlder="loadOlder"
-          :style="{ flexGrow: 1, minHeight: 0 }"
+          class="message-list-wrapper"
         />
-        <Composer :sending="sending" :streaming="streaming" @send="sendMessage" @stop="stopStream" :style="{ flexShrink: 0 }" />
+        <Composer 
+          :sending="sending" 
+          :streaming="streaming" 
+          @send="sendMessage" 
+          @stop="stopStream" 
+          class="composer-wrapper-outer"
+        />
       </a-layout-content>
     </a-layout>
   </a-layout>

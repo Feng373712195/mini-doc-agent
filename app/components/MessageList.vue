@@ -1,11 +1,10 @@
 <template>
-  <div ref="parentRef" class="message-list" :style="containerStyle" @scroll="onScroll">
-    <div :style="{ padding: 'var(--space-md)', boxSizing: 'border-box', maxWidth: '768px', margin: '0 auto', width: '100%' }">
+  <div ref="parentRef" class="message-list" @scroll="onScroll">
+    <div class="message-list-inner">
       <div
         v-for="m in messages"
         :key="m.id"
-        class="cv-auto"
-        :style="{ padding: 'var(--space-md) 0' }"
+        class="cv-auto message-item"
       >
         <MessageBubble :role="m.role" :content="m.content" />
       </div>
@@ -14,7 +13,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, ref, watch } from "vue";
+import { nextTick, ref, watch } from "vue";
 import type { Message } from "~/shared/chat";
 
 const props = defineProps<{
@@ -42,7 +41,7 @@ function scrollToBottom(behavior: ScrollBehavior = "auto") {
 
 /**
  * 容器滚动时触发：
- * - 根据“距离底部”的距离，维护 follow（是否自动跟随最新消息）状态
+ * - 根据"距离底部"的距离，维护 follow（是否自动跟随最新消息）状态
  * - 接近顶部时触发 loadOlder（分页加载更早的消息）
  */
 function onScroll() {
@@ -78,7 +77,7 @@ watch(
 );
 
 /**
- * 暴露基础滚动指标，便于父组件在“前插更早消息”后补偿 scrollTop，
+ * 暴露基础滚动指标，便于父组件在"前插更早消息"后补偿 scrollTop，
  * 避免视口内容突然跳动。
  */
 function getScrollMetrics() {
@@ -94,11 +93,4 @@ function setScrollTop(value: number) {
 }
 
 defineExpose({ scrollToBottom, getScrollMetrics, setScrollTop });
-
-const containerStyle = computed(() => ({
-  height: "100%",
-  overflow: "auto",
-  borderRadius: "var(--radius-lg)",
-  background: "transparent",
-}));
 </script>

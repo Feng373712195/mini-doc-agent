@@ -8,32 +8,16 @@
         placeholder="请输入你的问题（例如：React 中 useEffect 有什么作用？）"
         :bordered="false"
         @keydown.enter.exact.prevent="onSend"
-        :style="{
-          fontSize: '16px',
-          lineHeight: '1.6',
-          padding: '12px 16px',
-          resize: 'none',
-        }"
+        class="composer-textarea"
       />
-      <div :style="{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center', 
-        padding: '8px 12px',
-        borderTop: '1px solid var(--border-default)',
-      }">
-        <span class="text-muted" :style="{ fontSize: '12px' }">Enter 发送，Shift+Enter 换行</span>
-        <div :style="{ display: 'flex', gap: '8px' }">
+      <div class="composer-footer">
+        <span class="composer-hint">Enter 发送，Shift+Enter 换行</span>
+        <div class="composer-actions">
           <a-button 
             v-if="streaming" 
             danger 
             @click="$emit('stop')"
-            :style="{ 
-              height: '36px',
-              padding: '0 16px',
-              fontSize: '14px',
-              borderRadius: 'var(--radius-default)',
-            }"
+            class="btn-danger"
           >
             停止
           </a-button>
@@ -42,14 +26,7 @@
             type="primary" 
             :loading="sending" 
             @click="onSend"
-            :style="{ 
-              height: '36px',
-              padding: '0 20px',
-              fontSize: '14px',
-              borderRadius: 'var(--radius-default)',
-              background: 'var(--primary-navy)',
-              borderColor: 'var(--primary-navy)',
-            }"
+            class="btn-primary"
           >
             发送
           </a-button>
