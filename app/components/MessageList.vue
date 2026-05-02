@@ -1,11 +1,11 @@
 <template>
-  <div ref="parentRef" class="glass" :style="containerStyle" @scroll="onScroll">
-    <div :style="{ padding: '10px 14px', boxSizing: 'border-box' }">
+  <div ref="parentRef" class="message-list" :style="containerStyle" @scroll="onScroll">
+    <div :style="{ padding: 'var(--space-md)', boxSizing: 'border-box', maxWidth: '768px', margin: '0 auto', width: '100%' }">
       <div
         v-for="m in messages"
         :key="m.id"
         class="cv-auto"
-        :style="{ padding: '10px 0' }"
+        :style="{ padding: 'var(--space-md) 0' }"
       >
         <MessageBubble :role="m.role" :content="m.content" />
       </div>
@@ -98,6 +98,7 @@ defineExpose({ scrollToBottom, getScrollMetrics, setScrollTop });
 const containerStyle = computed(() => ({
   height: "100%",
   overflow: "auto",
-  borderRadius: "16px",
+  borderRadius: "var(--radius-lg)",
+  background: "transparent",
 }));
 </script>

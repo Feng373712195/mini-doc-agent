@@ -129,6 +129,7 @@ doc-agent/
 │
 ├─ scripts/
 ├─ docs/
+├─ rules/
 │
 ├─ nuxt.config.ts
 ├─ package.json

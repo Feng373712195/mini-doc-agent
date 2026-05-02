@@ -1,25 +1,54 @@
 <template>
   <a-layout :style="{ height: '100%' }">
     <a-layout-sider
-      width="300"
+      width="280"
       :collapsed-width="72"
       collapsible
       v-model:collapsed="collapsed"
-      class="glass"
-      :style="{ borderRight: '1px solid var(--border)' }"
+      class="sidebar"
     >
-      <div :style="{ padding: '16px 12px' }">
-        <div v-if="!collapsed" :style="{ fontSize: '18px', fontWeight: 600, marginBottom: '16px' }">
+      <div :style="{ padding: 'var(--space-lg) var(--space-md)' }">
+        <div v-if="!collapsed" :style="{ 
+          fontSize: '20px', 
+          fontWeight: 600, 
+          marginBottom: 'var(--space-lg)',
+          fontFamily: 'Plus Jakarta Sans, sans-serif',
+          color: 'var(--text-primary)',
+        }">
           Mini Doc Agent
         </div>
 
-        <div :style="{ display: 'grid', gap: '10px' }">
-          <a-button data-testid="new-chat" type="primary" block @click="onNewChat">New chat</a-button>
-          <a-input v-if="!collapsed" v-model:value="search" placeholder="Search chats" allow-clear />
+        <div :style="{ display: 'grid', gap: 'var(--space-sm)' }">
+          <a-button 
+            data-testid="new-chat" 
+            type="primary" 
+            block 
+            @click="onNewChat"
+            :style="{
+              height: '42px',
+              fontSize: '14px',
+              fontWeight: 500,
+              borderRadius: 'var(--radius-default)',
+              background: 'var(--primary-navy)',
+              borderColor: 'var(--primary-navy)',
+            }"
+          >
+            New chat
+          </a-button>
+          <a-input 
+            v-if="!collapsed" 
+            v-model:value="search" 
+            placeholder="Search chats" 
+            allow-clear
+            :style="{
+              height: '42px',
+              borderRadius: 'var(--radius-default)',
+            }"
+          />
         </div>
       </div>
 
-      <div :style="{ padding: '0 8px 12px' }">
+      <div :style="{ padding: '0 var(--space-sm) var(--space-md)' }">
         <a-list
           :data-source="filteredConversations"
           size="small"
@@ -29,18 +58,26 @@
           <template #renderItem="{ item }">
             <a-list-item
               :style="{
-                borderRadius: '12px',
-                margin: '6px 0',
-                padding: '10px 10px',
+                borderRadius: 'var(--radius-default)',
+                margin: 'var(--space-xs) 0',
+                padding: 'var(--space-sm) var(--space-md)',
                 cursor: 'pointer',
-                border: item.id === activeConversationId ? '1px solid rgba(121,166,255,0.6)' : '1px solid transparent',
-                background: item.id === activeConversationId ? 'rgba(121,166,255,0.10)' : 'transparent',
+                border: item.id === activeConversationId ? '1px solid var(--primary-navy)' : '1px solid transparent',
+                background: item.id === activeConversationId ? 'rgba(15, 23, 42, 0.06)' : 'transparent',
+                transition: 'all 150ms ease',
               }"
               @click="selectConversation(item.id)"
             >
               <div :style="{ width: '100%' }">
-                <div :style="{ fontWeight: 600, fontSize: '13px' }">{{ item.title }}</div>
-                <div class="muted" :style="{ fontSize: '12px', marginTop: '2px' }">
+                <div :style="{ 
+                  fontWeight: 500, 
+                  fontSize: '14px',
+                  color: 'var(--text-primary)',
+                  marginBottom: 'var(--space-xs)',
+                }">
+                  {{ item.title }}
+                </div>
+                <div class="text-muted" :style="{ fontSize: '12px' }">
                   {{ formatTime(item.updatedAt) }}
                 </div>
               </div>
@@ -53,23 +90,46 @@
     <a-layout :style="{ display: 'flex', flexDirection: 'column' }">
       <a-layout-header
         :style="{
-          background: 'transparent',
-          borderBottom: '1px solid var(--border)',
+          background: 'var(--surface)',
+          borderBottom: '1px solid var(--border-default)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: '0 24px',
+          padding: '0 var(--space-lg)',
           height: '64px',
           flexShrink: 0,
         }"
       >
-        <div :style="{ fontSize: '16px', fontWeight: 600 }">
+        <div :style="{ 
+          fontSize: '16px', 
+          fontWeight: 600,
+          fontFamily: 'Plus Jakarta Sans, sans-serif',
+          color: 'var(--text-primary)',
+        }">
           {{ activeTitle || "Chat" }}
         </div>
-        <a-button v-if="!follow" @click="scrollToBottom">Back to bottom</a-button>
+        <a-button 
+          v-if="!follow" 
+          @click="scrollToBottom"
+          :style="{
+            height: '36px',
+            fontSize: '14px',
+            borderRadius: 'var(--radius-default)',
+          }"
+        >
+          Back to bottom
+        </a-button>
       </a-layout-header>
 
-      <a-layout-content :style="{ display: 'flex', flexDirection: 'column', flexGrow: 1, minHeight: 0, padding: '16px', gap: '12px' }">
+      <a-layout-content :style="{ 
+        display: 'flex', 
+        flexDirection: 'column', 
+        flexGrow: 1, 
+        minHeight: 0, 
+        padding: 'var(--space-lg)', 
+        gap: 'var(--space-lg)',
+        background: 'var(--background)',
+      }">
         <MessageList
           ref="listRef"
           data-testid="message-list"

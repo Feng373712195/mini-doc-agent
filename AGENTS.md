@@ -1,80 +1,31 @@
-## 项目概述
-- 一个可开箱即用的 Nuxt 全栈文档问答 Agent 示例项目
+# AGENTS.md
 
-## 技术栈约束
-- Nuxt 3（必须）
-- Vue 3 + Composition API
-- TypeScript（必须使用）
-- 包管理器：pnpm（禁止混用 npm / yarn）
-- Node >= 18
-- Tailwind
+## 规则系统（必须遵守）
 
-## 测试
-- UI 组件需保证无报错渲染。
-- API 必须提供最基本的测试用例（如 vitest）。
-- 每个功能完成请进行测试，自测完成后才可以通过。
+AI执行任务时必须遵守以下规则：
 
-## 代码风格
-- 必须通过 ESLint + Prettier
-- 提交前必须执行：
-  pnpm lint
-  pnpm format
-  pnpm build
-- 代码麻烦优先使用Vue3 Composition API
+- 必须遵守 项目规范（/rules/project.md）
+- 必须遵守 技术栈规范（/rules/tech-stack.md）
+- 必须遵守 测试规范（/rules/testing.md）
+- 必须遵守 代码风格规范（/rules/code-style.md）
+- 必须遵守 样式规范（/rules/style.md）
+- 必须遵守 Git规范（/rules/git.md）
+- 必须遵守 安全规范（/rules/security.md）
+- 必须遵守 工作流规范（/rules/workflow.md）
+- 必须遵守 AI行为规范（/rules/ai-behavior.md）
+- 必须遵守 Review规范（/rules/review.md）
+- 必须遵守 任务定义规范（/rules/task-definition.md）
+- 必须遵守 输出规范（/rules/output.md）
+- 必须遵守 API规范（/rules/api-contract.md）
+- 必须遵守 架构规范（/rules/architecture.md）
+- 必须遵守 复杂度规范（/rules/complexity.md）
+- 必须遵守 复用规范（/rules/reuse.md）
+- 必须遵循 样式规范（/DESIGN.md）
 
-## 样式风格
-- 禁止使用内联样式（style=""）
-- 必须使用 class 或 Tailwind
-- 样式必须可复用，不允许写在模板中
-- 如出现内联样式，必须重构后再提交
+---
 
-## 注释
-- 请使用中文注释
-- 每句函数和变量请补充作用和用法注释。
-- 公共函数请使用JSDOC规范进行注释。
+## 执行原则
 
-## Git 提交规范
-- 使用 Conventional Commits
-  - feat: 新功能
-  - fix: 修复问题
-  - refactor: 重构
-  - docs: 文档
-- 单次提交必须聚焦一个功能
-
-## 注意事项
-- 安装新node_modules模块前请和我确认。
-- 如果项目中的文件目录结构有调整麻烦请停下来告诉我，我需要进行确认。
-
-## 安全
-- 禁止在代码中写死 API Key / Secret
-- 所有敏感信息必须使用 .env
-- 不允许打印敏感日志
-- 接口必须做基础参数校验
-
-## 输出要求
-- 修改代码必须提供修改文件列表
-- 必须说明修改原因
-- 如果涉及多个方案必须说明对比
-- 不允许只给代码不解释
-
-## AI 行为规范
-- 每次一个小任务做完需要给我review，没问题后需要提交代码
-- 做完一个任务之后，需要告诉我你接下来下一个任务要干什么
-- 每次提交任务时，需要和我确认，如果任务步骤比较大可以拆分为更小的任务
-- 修改代码前必须说明修改理由
-- 不确定需求时必须先提问，不允许擅自假设
-- 涉及架构调整必须先提出方案对比
-- 不允许删除未确认用途的代码
-- 每次修改必须说明影响范围
-
-## AI 自检规则（必须执行）
-
-- 生成代码后必须检查：
-  - 是否违反“代码风格“
-  - 是否违反“样式风格“
-- 如存在违规，必须自动修复后再输出
-
-## 进度记录
-- 每次完成功能开发或修改架构后，必须更新 AI_STATE.md
-- AI_STATE.md 根据文件结构记录进行记录，必须按固定模板更新，不允许自由发挥格式
-- AI_STATE.md 下一步计划中需要把任务描述清楚，具体要做什么事情表达清楚。
+- 必须按规则系统执行
+- 必须更新 AI_STATE.md
+- 必须进行任务拆分与自检

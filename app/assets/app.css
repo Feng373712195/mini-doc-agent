@@ -1,12 +1,36 @@
+/* Verdana Health Design System */
 :root {
-  --bg: #0b1020;
-  --panel: rgba(255, 255, 255, 0.06);
-  --panel2: rgba(255, 255, 255, 0.08);
-  --text: rgba(255, 255, 255, 0.92);
-  --muted: rgba(255, 255, 255, 0.68);
-  --border: rgba(255, 255, 255, 0.10);
-  --accent: #79a6ff;
-  --accent2: #8bf0ff;
+  /* Colors */
+  --primary-navy: #0F172A;
+  --secondary-slate: #64748B;
+  --tertiary-sage: #059669;
+  --background: #F8FAFC;
+  --surface: #FFFFFF;
+  --border-default: #E2E8F0;
+  --border-hover: #CBD5E1;
+  --text-primary: #0F172A;
+  --text-secondary: #475569;
+  --text-muted: #64748B;
+  
+  /* Spacing (8px base) */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 48px;
+  
+  /* Border Radius */
+  --radius-sm: 4px;
+  --radius-default: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.03);
+  --shadow-default: 0 2px 6px rgba(15, 23, 42, 0.05);
+  --shadow-md: 0 4px 16px rgba(15, 23, 42, 0.07);
+  --shadow-lg: 0 8px 32px rgba(15, 23, 42, 0.10);
 }
 
 html,
@@ -17,53 +41,99 @@ body,
 
 body {
   margin: 0;
-  color: var(--text);
-  background:
-    radial-gradient(1200px 600px at 15% 10%, rgba(121, 166, 255, 0.18), transparent 60%),
-    radial-gradient(900px 520px at 90% 0%, rgba(139, 240, 255, 0.14), transparent 55%),
-    linear-gradient(180deg, #070a14 0%, #0b1020 60%, #070a14 100%);
-  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans",
-    "Liberation Sans", sans-serif;
+  color: var(--text-primary);
+  background: var(--background);
+  font-family: 'DM Sans', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
 }
 
-.glass {
-  background: var(--panel);
-  border: 1px solid var(--border);
-  backdrop-filter: blur(10px);
+/* Sidebar */
+.sidebar {
+  background: var(--surface);
+  border-right: 1px solid var(--border-default);
 }
 
-.muted {
-  color: var(--muted);
-}
-
+/* Chat bubble */
 .chat-bubble {
-  padding: 12px 14px;
-  border-radius: 14px;
-  line-height: 1.55;
-  border: 1px solid var(--border);
+  padding: var(--space-md);
+  border-radius: var(--radius-default);
+  line-height: 1.6;
+  box-shadow: var(--shadow-sm);
 }
 
 .bubble-user {
-  background: rgba(121, 166, 255, 0.18);
+  background: var(--primary-navy);
+  color: var(--surface);
 }
 
 .bubble-assistant {
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--surface);
+  border: 1px solid var(--border-default);
+  color: var(--text-primary);
+}
+
+/* Message markdown */
+.msg-md {
+  color: var(--text-primary);
 }
 
 .msg-md pre {
-  background: rgba(0, 0, 0, 0.35);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  padding: 10px 12px;
-  border-radius: 12px;
+  background: var(--primary-navy);
+  border: 1px solid var(--border-default);
+  padding: var(--space-md);
+  border-radius: var(--radius-default);
   overflow: auto;
+  color: var(--surface);
 }
 
 .msg-md code {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-family: 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 14px;
 }
 
+/* Content visibility optimization */
 .cv-auto {
   content-visibility: auto;
   contain-intrinsic-size: 1px 160px;
+}
+
+/* Composer input area */
+.composer-wrapper {
+  max-width: 768px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.composer-container {
+  background: var(--surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-default);
+  transition: all 150ms ease;
+}
+
+.composer-container:hover {
+  border-color: var(--border-hover);
+}
+
+.composer-container:focus-within {
+  border-color: var(--primary-navy);
+  box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.08), var(--shadow-default);
+}
+
+/* Message list */
+.message-list {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Utility classes */
+.text-muted {
+  color: var(--text-muted);
+}
+
+.text-secondary {
+  color: var(--text-secondary);
 }
