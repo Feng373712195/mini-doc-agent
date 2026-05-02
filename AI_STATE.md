@@ -47,7 +47,21 @@
 
 ## 最近变更（摘要）
 
-
+- 结构调整：将前端代码迁移到 `app/` 目录，并通过 `srcDir` 启用（保持 `server/` 在仓库根目录）
+- 修复构建问题：修复了组件内重复 `defineExpose()` 导致的构建失败与 dev 500（IPC closed）
+- 修复类型检查：在 server routes 中使用 `~~/` 根别名，避免 `srcDir` 变更后 TS 路径解析失败
+- 修复 API 路由：修复 `serverDir` 配置，解决 `/api/conversations` 404
+- 修复布局高度问题：将 Grid 布局改为 Flexbox 三段式布局，确保输入框始终可见且固定在底部（已完成）
+- UI 简化：移除 logo 和副标题，简化界面，整体风格向 ChatGPT 靠拢（已完成）
+- 设计系统重构：按照 DESIGN.md 的 Verdana Health 设计系统重新设计页面样式（已完成）
+- 代码规范重构：完全移除内联样式，改用 CSS class（已完成）
+- 样式架构重构：移除 Tailwind，改用 Less（已完成）
+  - 卸载 Tailwind CSS，安装 Less 预处理器
+  - 创建 `/app/assets/styles/app.less` 全局样式文件
+  - 使用 Less 变量管理设计系统（@primary-navy, @space-md 等）
+  - 所有组件使用 `<style lang="less" scoped>`
+  - 使用 Less 嵌套结构组织样式
+  - 完全符合最新的 rules/style.md 规范
 
 ## 已知问题
 
