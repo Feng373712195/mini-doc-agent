@@ -1,5 +1,5 @@
 <template>
-  <a-layout class="app-layout">
+  <a-layout class="main-layout">
     <a-layout-sider
       width="280"
       :collapsed-width="72"
@@ -33,7 +33,7 @@
         </div>
       </div>
 
-      <div class="sidebar-list">
+      <div class="conversation-list">
         <a-list
           :data-source="filteredConversations"
           size="small"
@@ -56,24 +56,15 @@
       <div 
         class="sidebar-trigger" 
         @click="collapsed = !collapsed"
-        v-if="!collapsed"
       >
         <svg class="sidebar-trigger-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M15 18l-6-6 6-6" />
-        </svg>
-      </div>
-      <div 
-        class="sidebar-trigger" 
-        @click="collapsed = !collapsed"
-        v-else
-      >
-        <svg class="sidebar-trigger-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M9 18l6-6-6-6" />
+          <path v-if="!collapsed" d="M15 18l-6-6 6-6" />
+          <path v-else d="M9 18l6-6-6-6" />
         </svg>
       </div>
     </a-layout-sider>
 
-    <a-layout class="main-layout">
+    <a-layout class="main-layout-content">
       <a-layout-header class="main-header">
         <div class="main-header-title">
           {{ activeTitle || "Chat" }}
@@ -81,7 +72,7 @@
         <a-button 
           v-if="!follow" 
           @click="scrollToBottom"
-          class="btn-back"
+          class="btn-back-to-bottom"
         >
           Back to bottom
         </a-button>
@@ -97,14 +88,14 @@
           :hasMoreOlder="hasMoreOlder"
           @followChange="follow = $event"
           @loadOlder="loadOlder"
-          class="message-list-wrapper"
+          class="message-list-container"
         />
         <Composer 
           :sending="sending" 
           :streaming="streaming" 
           @send="sendMessage" 
           @stop="stopStream" 
-          class="composer-wrapper-outer"
+          class="composer-container"
         />
       </a-layout-content>
     </a-layout>
@@ -334,28 +325,39 @@ onMounted(async () => {
 <style lang="less" scoped>
 @import "~/assets/styles/app.less";
 
-/* Layout */
-.app-layout {
+/* Main Layout */
+.main-layout {
   height: 100%;
+  
+  :deep(.ant-layout) {
+    height: 100%;
+  }
 }
 
-.main-layout {
+.main-layout-content {
   display: flex;
   flex-direction: column;
+  height: 100%;
 }
 
 /* Sidebar */
 .sidebar {
   background: @surface;
   border-right: 1px solid @border-default;
-
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  
   :deep(.ant-list) {
     background: transparent;
   }
 }
 
 .sidebar-header {
-  padding: @space-lg @space-md;
+  padding: @space-lg;
+  flex-shrink: 0;
 }
 
 .sidebar-title {
@@ -367,11 +369,14 @@ onMounted(async () => {
 }
 
 .sidebar-actions {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: @space-sm;
 }
 
-.sidebar-list {
+.conversation-list {
+  flex: 1;
+  overflow-y: auto;
   padding: 0 @space-sm @space-md;
 }
 
@@ -404,6 +409,9 @@ onMounted(async () => {
   font-size: 14px;
   color: @text-primary;
   margin-bottom: @space-xs;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .conversation-time {
@@ -430,23 +438,24 @@ onMounted(async () => {
   color: @text-primary;
 }
 
-/* Main content */
+/* Main Content - 关键修复：使用 Flexbox 三段式布局 */
 .main-content {
   display: flex;
   flex-direction: column;
-  flex-grow: 1;
-  min-height: 0;
+  height: 100%;
   padding: @space-lg;
   gap: @space-lg;
   background: @background;
+  overflow: hidden;
 }
 
-.message-list-wrapper {
-  flex-grow: 1;
+.message-list-container {
+  flex: 1;
   min-height: 0;
+  overflow: hidden;
 }
 
-.composer-wrapper-outer {
+.composer-container {
   flex-shrink: 0;
 }
 
@@ -458,12 +467,6 @@ onMounted(async () => {
   border-radius: @radius-default;
   background: @primary-navy;
   border-color: @primary-navy;
-}
-
-.btn-back {
-  height: 36px;
-  font-size: 14px;
-  border-radius: @radius-default;
 }
 
 .input-search {
@@ -498,5 +501,11 @@ onMounted(async () => {
 .sidebar-trigger-icon {
   width: 16px;
   height: 16px;
+}
+
+.btn-back-to-bottom {
+  height: 36px;
+  font-size: 14px;
+  border-radius: @radius-default;
 }
 </style>
