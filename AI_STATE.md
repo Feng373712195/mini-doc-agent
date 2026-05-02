@@ -63,6 +63,12 @@
   - 修复 logo 和对话列表文字显示问题
   - 使用自定义 SVG 图标替换默认侧边栏折叠按钮
   - 符合 AGENTS.md 样式规范要求
+- 样式架构重构：引入 Tailwind CSS 并重构样式分层（已完成）
+  - 安装并配置 Tailwind CSS + PostCSS + Autoprefixer
+  - Tailwind 用于布局（flex, grid, spacing, sizing）
+  - app.css 只保留全局样式和公共组件样式
+  - 组件特定样式放在各自的 `<style scoped>` 中
+  - 完全符合更新后的 rules/style.md 规范
 
 ## 已知问题
 
