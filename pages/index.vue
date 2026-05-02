@@ -87,7 +87,10 @@
           data-testid="message-list"
           :messages="messages"
           :follow="follow"
+          :loadingOlder="loadingOlder"
+          :hasMoreOlder="hasMoreOlder"
           @followChange="follow = $event"
+          @loadOlder="loadOlder"
         />
         <Composer :sending="sending" :streaming="streaming" @send="sendMessage" @stop="stopStream" />
       </a-layout-content>
@@ -112,7 +115,14 @@ const sending = ref(false);
 const streaming = ref(false);
 const streamSource = shallowRef<EventSource | null>(null);
 
-const listRef = ref<{ scrollToBottom: () => void } | null>(null);
+const loadingOlder = ref(false);
+const hasMoreOlder = ref(false);
+
+const listRef = ref<{
+  scrollToBottom: () => void;
+  getScrollMetrics: () => { scrollTop: number; scrollHeight: number; clientHeight: number };
+  setScrollTop: (value: number) => void;
+} | null>(null);
 
 const activeTitle = computed(() => {
   const id = activeConversationId.value;
@@ -142,7 +152,10 @@ async function refreshConversations() {
 async function selectConversation(id: string) {
   stopStream();
   activeConversationId.value = id;
-  messages.value = await ofetch<Message[]>(`/api/conversations/${id}/messages`);
+  // Load newest page only; older pages are fetched on-demand.
+  const page = await ofetch<Message[]>(`/api/conversations/${id}/messages?limit=50`);
+  messages.value = page;
+  hasMoreOlder.value = page.length >= 50;
   await nextTick();
   scrollToBottom();
 }
@@ -247,10 +260,56 @@ async function sendMessage(content: string) {
       es.close();
       streamSource.value = null;
       // Pull latest persisted messages to recover.
-      messages.value = await ofetch<Message[]>(`/api/conversations/${conversationId}/messages`);
+      const page = await ofetch<Message[]>(`/api/conversations/${conversationId}/messages?limit=50`);
+      messages.value = page;
+      hasMoreOlder.value = page.length >= 50;
     });
   } finally {
     sending.value = false;
+  }
+}
+
+/**
+ * Load older messages in pages of 50 and prepend them while keeping the viewport stable.
+ */
+async function loadOlder() {
+  if (loadingOlder.value) return;
+  if (!hasMoreOlder.value) return;
+  const conversationId = activeConversationId.value;
+  if (!conversationId) return;
+
+  const first = messages.value[0];
+  if (!first) return;
+
+  loadingOlder.value = true;
+  follow.value = false; // user is browsing history
+
+  try {
+    const before = first.createdAt;
+    const metrics = listRef.value?.getScrollMetrics();
+    const prevScrollTop = metrics?.scrollTop ?? 0;
+    const prevScrollHeight = metrics?.scrollHeight ?? 0;
+
+    const older = await ofetch<Message[]>(
+      `/api/conversations/${conversationId}/messages?limit=50&before=${encodeURIComponent(String(before))}`
+    );
+
+    if (older.length === 0) {
+      hasMoreOlder.value = false;
+      return;
+    }
+
+    messages.value = [...older, ...messages.value];
+    if (older.length < 50) hasMoreOlder.value = false;
+
+    await nextTick();
+
+    const metrics2 = listRef.value?.getScrollMetrics();
+    const newScrollHeight = metrics2?.scrollHeight ?? prevScrollHeight;
+    const delta = newScrollHeight - prevScrollHeight;
+    listRef.value?.setScrollTop(prevScrollTop + delta);
+  } finally {
+    loadingOlder.value = false;
   }
 }
 

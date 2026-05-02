@@ -1,5 +1,4 @@
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
-import { useRuntimeConfig } from "#imports";
 
 function chunkArray<T>(items: T[], size: number): T[][] {
   const result: T[][] = [];
@@ -64,12 +63,21 @@ class OpenAICompatEmbeddings implements EmbeddingsInterface {
 }
 
 export function createEmbeddings(): EmbeddingsInterface {
-  const config = useRuntimeConfig();
-  if (!config.embeddingApiKey) throw new Error("Missing EMBEDDING_API_KEY");
+  const embeddingApiKey = process.env.EMBEDDING_API_KEY;
+  const embeddingModel = process.env.EMBEDDING_MODEL;
+  const embeddingBaseUrl = process.env.EMBEDDING_BASE_URL;
+  const embeddingDimensions = process.env.EMBEDDING_DIMENSIONS
+    ? Number(process.env.EMBEDDING_DIMENSIONS)
+    : undefined;
+
+  if (!embeddingApiKey) throw new Error("Missing EMBEDDING_API_KEY");
+  if (!embeddingModel) throw new Error("Missing EMBEDDING_MODEL");
+  if (!embeddingBaseUrl) throw new Error("Missing EMBEDDING_BASE_URL");
+
   return new OpenAICompatEmbeddings({
-    apiKey: String(config.embeddingApiKey),
-    model: String(config.embeddingModel),
-    baseUrl: String(config.embeddingBaseUrl),
-    dimensions: config.embeddingDimensions ? Number(config.embeddingDimensions) : undefined,
+    apiKey: String(embeddingApiKey),
+    model: String(embeddingModel),
+    baseUrl: String(embeddingBaseUrl),
+    dimensions: embeddingDimensions,
   });
 }

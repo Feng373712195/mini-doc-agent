@@ -22,5 +22,10 @@ test("streams assistant message in chat UI", async ({ page }) => {
   const secondText = await assistant.innerText();
 
   expect(secondText.length).toBeGreaterThan(firstText.length);
-});
 
+  // Scroll to top to trigger older-message loading (pagination).
+  const list = page.getByTestId("message-list");
+  await list.evaluate((el) => (el.scrollTop = 0));
+  // Should remain stable even if no older messages exist (no crash).
+  await page.waitForTimeout(300);
+});

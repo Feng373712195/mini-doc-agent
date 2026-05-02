@@ -1,5 +1,4 @@
 import { ChatOpenAI } from "@langchain/openai";
-import { useRuntimeConfig } from "#imports";
 
 function normalizeChatBaseUrl(url: string): string {
   const trimmed = url.replace(/\/+$/, "");
@@ -21,14 +20,18 @@ export async function* streamChatText(prompt: string): AsyncGenerator<string> {
     return;
   }
 
-  const config = useRuntimeConfig();
-  if (!config.chatApiKey) throw new Error("Missing CHAT_API_KEY");
+  const chatApiKey = process.env.CHAT_API_KEY;
+  const chatModel = process.env.CHAT_MODEL;
+  const chatBaseUrl = process.env.CHAT_BASE_URL;
+  if (!chatApiKey) throw new Error("Missing CHAT_API_KEY");
+  if (!chatModel) throw new Error("Missing CHAT_MODEL");
+  if (!chatBaseUrl) throw new Error("Missing CHAT_BASE_URL");
 
   const model = new ChatOpenAI({
-    model: String(config.chatModel),
+    model: String(chatModel),
     temperature: 0,
-    apiKey: String(config.chatApiKey),
-    configuration: { baseURL: normalizeChatBaseUrl(String(config.chatBaseUrl)) },
+    apiKey: String(chatApiKey),
+    configuration: { baseURL: normalizeChatBaseUrl(String(chatBaseUrl)) },
   });
 
   // LangChain streaming yields message chunks; we coerce to incremental text.

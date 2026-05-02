@@ -3,7 +3,6 @@ import fs from "node:fs";
 import path from "node:path";
 import { nanoid } from "nanoid";
 import type { Conversation, Message, Role } from "~/shared/chat";
-import { useRuntimeConfig } from "#imports";
 
 let dbSingleton: Database.Database | null = null;
 
@@ -12,8 +11,7 @@ function ensureDir(dir: string) {
 }
 
 function getDbPath() {
-  const config = useRuntimeConfig();
-  const dataDir = path.resolve(String(config.dataDir || "data"));
+  const dataDir = path.resolve(String(process.env.DATA_DIR || "data"));
   ensureDir(dataDir);
   return path.join(dataDir, "chat.db");
 }
@@ -96,6 +94,37 @@ export function getMessages(conversationId: string): Message[] {
     )
     .all(conversationId) as Message[];
   return rows;
+}
+
+/**
+ * Get a page of messages for a conversation.
+ *
+ * - Default: newest messages first (DESC), but returned in ASC order for UI rendering.
+ * - Use `beforeCreatedAt` to fetch older messages (created_at < beforeCreatedAt).
+ */
+export function getMessagesPage(params: {
+  conversationId: string;
+  limit: number;
+  beforeCreatedAt?: number;
+}): Message[] {
+  const db = getDb();
+  const limit = Math.min(Math.max(params.limit, 1), 200);
+  const beforeCreatedAt = params.beforeCreatedAt ? Number(params.beforeCreatedAt) : undefined;
+
+  const rows = beforeCreatedAt
+    ? (db
+        .prepare(
+          "SELECT id, conversation_id as conversationId, role, content, created_at as createdAt, updated_at as updatedAt FROM messages WHERE conversation_id=? AND created_at < ? ORDER BY created_at DESC LIMIT ?"
+        )
+        .all(params.conversationId, beforeCreatedAt, limit) as Message[])
+    : (db
+        .prepare(
+          "SELECT id, conversation_id as conversationId, role, content, created_at as createdAt, updated_at as updatedAt FROM messages WHERE conversation_id=? ORDER BY created_at DESC LIMIT ?"
+        )
+        .all(params.conversationId, limit) as Message[]);
+
+  // We query in DESC for efficiency and then reverse so UI renders in ASC.
+  return rows.reverse();
 }
 
 export function insertMessage(params: {
