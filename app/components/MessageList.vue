@@ -1,10 +1,10 @@
 <template>
   <div ref="parentRef" class="message-list" @scroll="onScroll">
-    <div class="message-list-inner">
+    <div class="px-4 max-w-3xl mx-auto w-full">
       <div
         v-for="m in messages"
         :key="m.id"
-        class="cv-auto message-item"
+        class="cv-auto py-4"
       >
         <MessageBubble :role="m.role" :content="m.content" />
       </div>
@@ -94,3 +94,12 @@ function setScrollTop(value: number) {
 
 defineExpose({ scrollToBottom, getScrollMetrics, setScrollTop });
 </script>
+
+<style scoped>
+.message-list {
+  height: 100%;
+  overflow: auto;
+  border-radius: var(--radius-lg);
+  background: transparent;
+}
+</style>

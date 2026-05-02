@@ -1,12 +1,8 @@
 <template>
-  <div class="bubble-user-wrapper" v-if="role === 'user'">
-    <div class="chat-bubble bubble-user">
-      {{ content }}
-    </div>
-  </div>
-  <div class="bubble-assistant-wrapper" v-else>
-    <div class="chat-bubble bubble-assistant">
-      <MarkdownRender :content="content" />
+  <div class="flex" :class="role === 'user' ? 'justify-end' : 'justify-start'">
+    <div class="chat-bubble max-w-4xl w-fit" :class="role === 'user' ? 'bubble-user' : 'bubble-assistant'">
+      <MarkdownRender v-if="role !== 'user'" :content="content" />
+      <div v-else>{{ content }}</div>
     </div>
   </div>
 </template>

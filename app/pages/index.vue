@@ -1,5 +1,5 @@
 <template>
-  <a-layout class="app-layout">
+  <a-layout class="h-full">
     <a-layout-sider
       width="280"
       :collapsed-width="72"
@@ -8,12 +8,12 @@
       class="sidebar"
       :trigger="null"
     >
-      <div class="sidebar-header">
+      <div class="p-6">
         <div v-if="!collapsed" class="sidebar-title">
           Mini Doc Agent
         </div>
 
-        <div class="sidebar-actions">
+        <div class="grid gap-2">
           <a-button 
             data-testid="new-chat" 
             type="primary" 
@@ -33,7 +33,7 @@
         </div>
       </div>
 
-      <div class="sidebar-list">
+      <div class="px-2 pb-3">
         <a-list
           :data-source="filteredConversations"
           size="small"
@@ -44,7 +44,7 @@
               :class="['conversation-item', { active: item.id === activeConversationId }]"
               @click="selectConversation(item.id)"
             >
-              <div class="conversation-item-content">
+              <div class="w-full">
                 <div class="conversation-title">{{ item.title }}</div>
                 <div class="conversation-time">{{ formatTime(item.updatedAt) }}</div>
               </div>
@@ -58,7 +58,7 @@
         @click="collapsed = !collapsed"
         v-if="!collapsed"
       >
-        <svg class="sidebar-trigger-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M15 18l-6-6 6-6" />
         </svg>
       </div>
@@ -67,13 +67,13 @@
         @click="collapsed = !collapsed"
         v-else
       >
-        <svg class="sidebar-trigger-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M9 18l6-6-6-6" />
         </svg>
       </div>
     </a-layout-sider>
 
-    <a-layout class="main-layout">
+    <a-layout class="flex flex-col">
       <a-layout-header class="main-header">
         <div class="main-header-title">
           {{ activeTitle || "Chat" }}
@@ -81,13 +81,13 @@
         <a-button 
           v-if="!follow" 
           @click="scrollToBottom"
-          class="btn-secondary"
+          class="h-9 text-sm rounded-lg"
         >
           Back to bottom
         </a-button>
       </a-layout-header>
 
-      <a-layout-content class="main-content">
+      <a-layout-content class="flex flex-col flex-grow min-h-0 p-6 gap-6 bg-background">
         <MessageList
           ref="listRef"
           data-testid="message-list"
@@ -97,14 +97,14 @@
           :hasMoreOlder="hasMoreOlder"
           @followChange="follow = $event"
           @loadOlder="loadOlder"
-          class="message-list-wrapper"
+          class="flex-grow min-h-0"
         />
         <Composer 
           :sending="sending" 
           :streaming="streaming" 
           @send="sendMessage" 
           @stop="stopStream" 
-          class="composer-wrapper-outer"
+          class="flex-shrink-0"
         />
       </a-layout-content>
     </a-layout>
@@ -330,3 +330,113 @@ onMounted(async () => {
   await refreshConversations();
 });
 </script>
+
+<style scoped>
+/* Sidebar */
+.sidebar {
+  background: var(--surface);
+  border-right: 1px solid var(--border-default);
+}
+
+.sidebar-title {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: var(--space-lg);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  color: var(--text-primary);
+}
+
+.sidebar :deep(.ant-list) {
+  background: transparent;
+}
+
+/* Conversation item */
+.conversation-item {
+  border-radius: var(--radius-default);
+  margin: var(--space-xs) 0;
+  padding: var(--space-sm) var(--space-md);
+  cursor: pointer;
+  border: 1px solid transparent;
+  background: transparent;
+  transition: all 150ms ease;
+}
+
+.conversation-item:hover {
+  background: rgba(15, 23, 42, 0.03);
+}
+
+.conversation-item.active {
+  border-color: var(--primary-navy);
+  background: rgba(15, 23, 42, 0.06);
+}
+
+.conversation-title {
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--text-primary);
+  margin-bottom: var(--space-xs);
+}
+
+.conversation-time {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* Main header */
+.main-header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border-default);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--space-lg);
+  height: 64px;
+  flex-shrink: 0;
+}
+
+.main-header-title {
+  font-size: 16px;
+  font-weight: 600;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  color: var(--text-primary);
+}
+
+/* Buttons */
+.btn-new-chat {
+  height: 42px;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: var(--radius-default);
+  background: var(--primary-navy);
+  border-color: var(--primary-navy);
+}
+
+.input-search {
+  height: 42px;
+  border-radius: var(--radius-default);
+}
+
+/* Sidebar trigger */
+.sidebar-trigger {
+  position: absolute;
+  top: 16px;
+  right: -40px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-default);
+  cursor: pointer;
+  transition: all 150ms ease;
+  z-index: 10;
+  color: var(--text-primary);
+}
+
+.sidebar-trigger:hover {
+  background: var(--background);
+  border-color: var(--border-hover);
+}
+</style>
