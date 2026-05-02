@@ -89,16 +89,52 @@ CHAT_MOCK=1 USE_MOCK_RAG=1 npm run test:e2e
 
 ```text
 doc-agent/
-  assets/
-  components/
-  docs/
-  pages/
-  scripts/
-  server/
-  shared/
-  vector-store/
-  README.md
-  nuxt.config.ts
-  package.json
+├─ app/                              # 前端应用目录（UI 收敛）
+│  ├─ pages/
+│  ├─ layouts/
+│  ├─ middleware/
+│  ├─ components/
+│  ├─ composables/
+│  ├─ plugins/
+│  ├─ assets/
+│  ├─ app.vue
+│  └─ error.vue                      #（可选）
+│
+├─ public/
+│
+├─ server/                            # 服务端（Nitro）
+│  ├─ api/
+│  ├─ middleware/
+│  ├─ services/
+│  ├─ repositories/
+│  ├─ validators/
+│  ├─ utils/
+│  └─ db/
+│
+├─ shared/                            # 前后端共享（纯类型/协议/无运行时依赖）
+│  ├─ types/
+│  ├─ schemas/
+│  ├─ constants/
+│  └─ utils/
+│
+├─ tests/                             # 测试统一入口（推荐保留）
+│  ├─ e2e/                            # 端到端测试（Playwright）
+│  │  ├─ specs/                       # 测试用例（*.spec.ts）
+│  │  ├─ fixtures/                    # e2e 固定数据、mock 文件
+│  │  └─ utils/                       # e2e 专用工具（登录、API helper）
+│  ├─ unit/                           # 纯函数/组件逻辑单测（如 vitest）
+│  └─ integration/                    # server/service 集成测试
+│
+├─ playwright.config.ts               # Playwright 配置
+│
+├─ scripts/
+├─ docs/
+│
+├─ nuxt.config.ts
+├─ package.json
+├─ pnpm-lock.yaml
+├─ tsconfig.json
+├─ eslint.config.*
+└─ .env
 ```
 

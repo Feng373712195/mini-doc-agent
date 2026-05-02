@@ -1,6 +1,12 @@
 import { defineNuxtConfig } from "nuxt/config";
+import { resolve } from "node:path";
 
 export default defineNuxtConfig({
+  // 将前端源代码收敛到 app/ 目录，方便开源与维护（目录结构以 README 为准）。
+  srcDir: "app/",
+  // server/ 仍然放在仓库根目录（README 结构要求）。
+  // 注意：serverDir 是相对于 srcDir 的，因此需要用 ../ 回到根目录。
+  serverDir: "../server",
   devtools: { enabled: true },
   css: ["ant-design-vue/dist/reset.css", "~/assets/app.css"],
   app: {
@@ -23,6 +29,10 @@ export default defineNuxtConfig({
       : undefined,
     dataDir: process.env.DATA_DIR,
     public: {},
+  },
+  // shared/ 目录位于仓库根目录，不在 srcDir 之下，这里通过 alias 提供通用路径。
+  alias: {
+    "~/shared": resolve(process.cwd(), "shared"),
   },
   typescript: {
     strict: true,
