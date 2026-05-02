@@ -31,8 +31,8 @@ const emit = defineEmits<{
 const parentRef = ref<HTMLElement | null>(null);
 
 /**
- * Scroll to bottom of the list.
- * `smooth` is used for streaming UX; `auto` is used for initial jumps.
+ * 滚动到列表底部。
+ * `smooth` 用于流式输出时的体验；`auto` 用于初始化跳转（不做动画，避免抖动）。
  */
 function scrollToBottom(behavior: ScrollBehavior = "auto") {
   const el = parentRef.value;
@@ -41,9 +41,9 @@ function scrollToBottom(behavior: ScrollBehavior = "auto") {
 }
 
 /**
- * Called on container scroll:
- * - maintain "follow" state based on distance to bottom
- * - trigger "loadOlder" when near top (pagination)
+ * 容器滚动时触发：
+ * - 根据“距离底部”的距离，维护 follow（是否自动跟随最新消息）状态
+ * - 接近顶部时触发 loadOlder（分页加载更早的消息）
  */
 function onScroll() {
   const el = parentRef.value;
@@ -77,11 +77,9 @@ watch(
   }
 );
 
-defineExpose({ scrollToBottom });
-
 /**
- * Expose basic scroll metrics so the parent can compensate scrollTop
- * when prepending older messages (avoid viewport jump).
+ * 暴露基础滚动指标，便于父组件在“前插更早消息”后补偿 scrollTop，
+ * 避免视口内容突然跳动。
  */
 function getScrollMetrics() {
   const el = parentRef.value;
