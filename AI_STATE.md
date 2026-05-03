@@ -47,31 +47,7 @@
 - 测试
   - `npm run test:unit`：通过
   - `npm run build`：通过
-  - `npm run typecheck`：通过
-
-## 最近变更（摘要）
-
-### 2024-05-03 界面修复
-- **问题**：上次修改后界面异常
-- **修复内容**：
-  1. 修复布局结构：确保主布局使用正确的 Flexbox 三段式布局
-  2. 移除所有 Tailwind CSS 类名残留（`flex`, `flex-col`, `h-9`, `text-sm`, `rounded-lg`, `w-full`, `px-2`, `pb-3`, `p-6`, `grid`, `gap-2` 等）
-  3. 使用 Less 类名替代：`.main-layout`, `.main-layout-content`, `.sidebar-header`, `.sidebar-actions`, `.conversation-list`, `.conversation-item-content`, `.btn-back-to-bottom` 等
-  4. 优化 Sidebar 结构：
-     - 添加 `.sidebar-header` 容器包裹标题和操作按钮
-     - 添加 `.conversation-list` 容器包裹会话列表，支持独立滚动
-     - 优化折叠按钮逻辑，使用单个元素 + v-if 控制图标
-  5. 确保所有样式符合 rules/style.md 规范：
-     - 使用 Less 变量（@primary-navy, @space-md, @radius-default 等）
-     - 使用 Less 嵌套结构
-     - 所有组件样式使用 `<style lang="less" scoped>`
-     - 复用 app.less 中的全局样式（.chat-bubble, .bubble-user, .bubble-assistant 等）
-  6. 修复布局高度问题：
-     - `.main-layout` 设置 `height: 100%`
-     - `.main-layout-content` 使用 `display: flex; flex-direction: column; height: 100%`
-     - `.main-content` 使用 Flexbox 三段式：header 固定高度，message-list 弹性增长，composer 固定高度
-     - `.message-list-container` 设置 `flex: 1; min-height: 0; overflow: hidden`
-     - `.composer-container` 设置 `flex-shrink: 0`
+  - `npm run typecheck`：通过（已补齐 tsconfig paths，支持 `~~/server/*`）
 
 ### 历史变更
 - 结构调整：将前端代码迁移到 `app/` 目录，并通过 `srcDir` 启用（保持 `server/` 在仓库根目录）
