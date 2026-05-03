@@ -1,11 +1,21 @@
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 
+/**
+ * 将数组分块，用于批量处理
+ * @param items - 待分块的数组
+ * @param size - 每块的大小
+ * @returns 分块后的二维数组
+ */
 function chunkArray<T>(items: T[], size: number): T[][] {
   const result: T[][] = [];
   for (let i = 0; i < items.length; i += size) result.push(items.slice(i, i + size));
   return result;
 }
 
+/**
+ * OpenAI 兼容的 Embeddings 实现
+ * 支持任何兼容 OpenAI Embeddings API 的服务（如智谱、通义等）
+ */
 class OpenAICompatEmbeddings implements EmbeddingsInterface {
   private readonly apiKey: string;
   private readonly model: string;
@@ -28,6 +38,7 @@ class OpenAICompatEmbeddings implements EmbeddingsInterface {
   async embedDocuments(texts: string[]): Promise<number[][]> {
     if (texts.length === 0) return [];
 
+    // 分批处理，避免单次请求过大（每批最多 64 条）
     const batches = chunkArray(texts, 64);
     const allVectors: number[][] = [];
 
@@ -53,6 +64,7 @@ class OpenAICompatEmbeddings implements EmbeddingsInterface {
         data: Array<{ embedding: number[]; index: number }>;
       };
 
+      // 按索引重新排序，确保顺序与输入一致
       const batchVectors = new Array(batch.length);
       for (const item of data.data) batchVectors[item.index] = item.embedding;
       allVectors.push(...(batchVectors as number[][]));
@@ -62,6 +74,11 @@ class OpenAICompatEmbeddings implements EmbeddingsInterface {
   }
 }
 
+/**
+ * 创建 Embeddings 实例
+ * 从环境变量读取配置，支持 OpenAI 兼容的 API
+ * @returns Embeddings 接口实例
+ */
 export function createEmbeddings(): EmbeddingsInterface {
   const embeddingApiKey = process.env.EMBEDDING_API_KEY;
   const embeddingModel = process.env.EMBEDDING_MODEL;

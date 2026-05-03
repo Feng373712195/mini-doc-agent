@@ -4,23 +4,39 @@ import path from "node:path";
 import { nanoid } from "nanoid";
 import type { Conversation, Message, Role } from "~~/shared/chat";
 
+// 数据库单例
 let dbSingleton: Database.Database | null = null;
 
+/**
+ * 确保目录存在，不存在则创建
+ */
 function ensureDir(dir: string) {
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 }
 
+/**
+ * 获取数据库文件路径
+ * 从环境变量读取数据目录，默认为 data/
+ */
 function getDbPath() {
   const dataDir = path.resolve(String(process.env.DATA_DIR || "data"));
   ensureDir(dataDir);
   return path.join(dataDir, "chat.db");
 }
 
+/**
+ * 获取数据库实例（单例模式）
+ * 首次调用时初始化数据库并创建表结构
+ */
 export function getDb() {
   if (dbSingleton) return dbSingleton;
   const dbPath = getDbPath();
   const db = new Database(dbPath);
+  
+  // 启用 WAL 模式，提升并发性能
   db.pragma("journal_mode = WAL");
+  
+  // 创建表结构和索引
   db.exec(`
     CREATE TABLE IF NOT EXISTS conversations (
       id TEXT PRIMARY KEY,
@@ -43,10 +59,18 @@ export function getDb() {
   return dbSingleton;
 }
 
+/**
+ * 获取当前时间戳（毫秒）
+ */
 export function nowMs() {
   return Date.now();
 }
 
+/**
+ * 创建新会话
+ * @param title - 会话标题，默认为 "New chat"
+ * @returns 创建的会话对象
+ */
 export function createConversation(title?: string): Conversation {
   const db = getDb();
   const ts = nowMs();
@@ -62,6 +86,12 @@ export function createConversation(title?: string): Conversation {
   return conversation;
 }
 
+/**
+ * 获取会话列表
+ * @param limit - 返回数量限制，默认 50
+ * @param offset - 偏移量，默认 0
+ * @returns 会话列表，按更新时间倒序
+ */
 export function listConversations(limit = 50, offset = 0): Conversation[] {
   const db = getDb();
   const rows = db
@@ -72,11 +102,20 @@ export function listConversations(limit = 50, offset = 0): Conversation[] {
   return rows;
 }
 
+/**
+ * 更新会话的最后更新时间
+ * @param conversationId - 会话 ID
+ */
 export function touchConversation(conversationId: string) {
   const db = getDb();
   db.prepare("UPDATE conversations SET updated_at=? WHERE id=?").run(nowMs(), conversationId);
 }
 
+/**
+ * 设置会话标题
+ * @param conversationId - 会话 ID
+ * @param title - 新标题（自动截断到 80 字符）
+ */
 export function setConversationTitle(conversationId: string, title: string) {
   const db = getDb();
   db.prepare("UPDATE conversations SET title=?, updated_at=? WHERE id=?").run(
@@ -86,6 +125,11 @@ export function setConversationTitle(conversationId: string, title: string) {
   );
 }
 
+/**
+ * 获取会话的所有消息
+ * @param conversationId - 会话 ID
+ * @returns 消息列表，按创建时间升序
+ */
 export function getMessages(conversationId: string): Message[] {
   const db = getDb();
   const rows = db
@@ -97,10 +141,13 @@ export function getMessages(conversationId: string): Message[] {
 }
 
 /**
- * Get a page of messages for a conversation.
- *
- * - Default: newest messages first (DESC), but returned in ASC order for UI rendering.
- * - Use `beforeCreatedAt` to fetch older messages (created_at < beforeCreatedAt).
+ * 分页获取会话消息
+ * 支持向前翻页（加载更早的消息）
+ * 
+ * @param params.conversationId - 会话 ID
+ * @param params.limit - 每页数量（1-200）
+ * @param params.beforeCreatedAt - 可选，获取此时间戳之前的消息
+ * @returns 消息列表，按创建时间升序（适合 UI 渲染）
  */
 export function getMessagesPage(params: {
   conversationId: string;
@@ -123,10 +170,17 @@ export function getMessagesPage(params: {
         )
         .all(params.conversationId, limit) as Message[]);
 
-  // We query in DESC for efficiency and then reverse so UI renders in ASC.
+  // 查询结果是倒序的（DESC），需要反转为升序以便 UI 渲染
   return rows.reverse();
 }
 
+/**
+ * 插入新消息
+ * @param params.conversationId - 会话 ID
+ * @param params.role - 消息角色（user/assistant）
+ * @param params.content - 消息内容
+ * @returns 创建的消息对象
+ */
 export function insertMessage(params: {
   conversationId: string;
   role: Role;
@@ -149,11 +203,21 @@ export function insertMessage(params: {
   return msg;
 }
 
+/**
+ * 更新消息内容
+ * @param messageId - 消息 ID
+ * @param content - 新内容
+ */
 export function updateMessageContent(messageId: string, content: string) {
   const db = getDb();
   db.prepare("UPDATE messages SET content=?, updated_at=? WHERE id=?").run(content, nowMs(), messageId);
 }
 
+/**
+ * 获取会话中最新的用户消息
+ * @param conversationId - 会话 ID
+ * @returns 最新的用户消息，不存在则返回 null
+ */
 export function getLatestUserMessage(conversationId: string): Message | null {
   const db = getDb();
   const row = db
