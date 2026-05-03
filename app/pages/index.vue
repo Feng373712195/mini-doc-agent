@@ -10,7 +10,7 @@
     >
       <div class="sidebar-header">
         <div v-if="!collapsed" class="sidebar-title">
-          Mini Doc Agent
+          RepoMind
         </div>
 
         <div class="sidebar-actions">
@@ -105,7 +105,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, ref, shallowRef } from "vue";
 import { ofetch } from "ofetch";
-import type { Conversation, Message } from "~/shared/chat";
+import type { Conversation, Message } from "~~/shared/chat";
 
 const collapsed = ref(false);
 const search = ref("");

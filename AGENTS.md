@@ -15,7 +15,7 @@ AI执行任务时必须遵守以下规则：
 - 必须遵守 安全规范（/rules/security.md）
 - 必须遵守 工作流规范（/rules/workflow.md）
 - 必须遵守 AI行为规范（/rules/ai-behavior.md）
-- 必须遵守 AGENTS设计规范（/rules/agents.md）
+- 必须遵守 AI设计规范（/rules/ai-design.md）
 - 必须遵守 Review规范（/rules/review.md）
 - 必须遵守 任务定义规范（/rules/task-definition.md）
 - 必须遵守 输出规范（/rules/output.md）

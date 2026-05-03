@@ -11,7 +11,7 @@ export default defineNuxtConfig({
   css: ["ant-design-vue/dist/reset.css", "~/assets/styles/app.less"],
   app: {
     head: {
-      title: "Mini Doc Agent",
+      title: "RepoMind",
       meta: [
         { name: "viewport", content: "width=device-width, initial-scale=1" },
       ],

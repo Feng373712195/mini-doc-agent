@@ -60,10 +60,6 @@
   - `utils/rag/vectorStore.ts` → `services/vectorStore.ts`（向量存储服务封装）
   - 同步更新测试文件导入路径（`tests/unit/chatStream.test.ts`、`tests/unit/retrieve.test.ts`）
   - 验证通过：单元测试全部通过（2/2 passed）
-- 结构调整：将前端代码迁移到 `app/` 目录，并通过 `srcDir` 启用（保持 `server/` 在仓库根目录）
-- 修复构建问题：修复了组件内重复 `defineExpose()` 导致的构建失败与 dev 500（IPC closed）
-- 修复类型检查：在 server routes 中使用 `~~/` 根别名，避免 `srcDir` 变更后 TS 路径解析失败
-- 修复 API 路由：修复 `serverDir` 配置，解决 `/api/conversations` 404
 
 ## 已知问题
 
