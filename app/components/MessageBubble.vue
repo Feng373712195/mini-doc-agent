@@ -8,7 +8,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Role } from "~/shared/chat";
+import type { Role } from "~~/shared/chat";
 
 defineProps<{ role: Role; content: string }>();
 </script>

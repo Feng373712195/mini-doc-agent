@@ -1,5 +1,10 @@
 {
   "extends": "./.nuxt/tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "~~/*": ["./*"]
+    }
+  },
   "include": [
     "nuxt.config.ts",
     "app.vue",
@@ -7,7 +12,11 @@
     "components/**/*.vue",
     "server/**/*.ts",
     "shared/**/*.ts",
-    "scripts/**/*.ts"
+    "scripts/**/*.ts",
+    "app/**/*.vue",
+    "app/**/*.ts",
+    "app/**/*.tsx",
+    "app/**/*.tsx",
   ]
 }
 

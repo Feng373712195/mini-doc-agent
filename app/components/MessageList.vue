@@ -14,7 +14,7 @@
 
 <script setup lang="ts">
 import { nextTick, ref, watch } from "vue";
-import type { Message } from "~/shared/chat";
+import type { Message } from "~~/shared/chat";
 
 const props = defineProps<{
   messages: Message[];
