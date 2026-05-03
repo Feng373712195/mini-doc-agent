@@ -1,6 +1,6 @@
-# Mini Doc Agent (Nuxt Fullstack)
+# RepoMind (Nuxt Fullstack)
 
-一个可开箱即用的 Nuxt 全栈文档问答 Agent 示例项目，包含：
+一个可开箱即用的 Nuxt 全栈文档问答系统 示例项目，包含：
 - 文档读取与切分（`docs/*.md`）
 - 基于 `HNSWLib` 的向量检索（本地 `vector-store/`）
 - 通过 OpenAI 兼容接口的聊天模型问答
@@ -103,13 +103,10 @@ doc-agent/
 ├─ public/
 │
 ├─ server/                            # 服务端（Nitro）
-│  ├─ api/
-│  ├─ middleware/
-│  ├─ services/
-│  ├─ repositories/
-│  ├─ validators/
-│  ├─ utils/
-│  └─ db/
+│  ├─ api/                            # HTTP 端点层
+│  ├─ core/                           # 核心业务层（数据访问、业务逻辑）
+│  ├─ services/                       # 外部服务封装（LLM、向量存储等）
+│  └─ utils/                          # 纯工具函数（可选）
 │
 ├─ shared/                            # 前后端共享（纯类型/协议/无运行时依赖）
 │  ├─ types/

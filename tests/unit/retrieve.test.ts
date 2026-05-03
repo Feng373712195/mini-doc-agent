@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach } from "vitest";
-import { retrieveContexts } from "../../server/utils/rag/retrieve";
+import { retrieveContexts } from "../../server/core/retrieval";
 
 describe("retrieveContexts (mock)", () => {
   beforeEach(() => {

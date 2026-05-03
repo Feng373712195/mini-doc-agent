@@ -1,4 +1,4 @@
-import { getMessagesPage } from "~~/server/utils/db";
+import { getMessagesPage } from "~~/server/core/database";
 import { createError, defineEventHandler, getQuery, getRouterParam } from "h3";
 
 export default defineEventHandler((event) => {

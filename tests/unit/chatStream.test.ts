@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach } from "vitest";
-import { streamChatText } from "../../server/utils/llm/chat";
+import { streamChatText } from "../../server/services/chat";
 
 describe("streamChatText (mock)", () => {
   beforeEach(() => {

@@ -2,7 +2,7 @@ import Database from "better-sqlite3";
 import fs from "node:fs";
 import path from "node:path";
 import { nanoid } from "nanoid";
-import type { Conversation, Message, Role } from "~/shared/chat";
+import type { Conversation, Message, Role } from "~~/shared/chat";
 
 let dbSingleton: Database.Database | null = null;
 

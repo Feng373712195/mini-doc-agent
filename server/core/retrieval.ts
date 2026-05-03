@@ -1,4 +1,4 @@
-import { loadOrCreateVectorStore } from "./vectorStore";
+import { loadOrCreateVectorStore } from "../services/vectorStore";
 
 export async function retrieveContexts(query: string, k = 3) {
   if (process.env.USE_MOCK_RAG === "1") {

@@ -1,6 +1,6 @@
-import { getLatestUserMessage, getMessages, updateMessageContent } from "~~/server/utils/db";
-import { retrieveContexts } from "~~/server/utils/rag/retrieve";
-import { streamChatText } from "~~/server/utils/llm/chat";
+import { getLatestUserMessage, getMessages, updateMessageContent } from "~~/server/core/database";
+import { retrieveContexts } from "~~/server/core/retrieval";
+import { streamChatText } from "~~/server/services/chat";
 import type { Message } from "~~/shared/chat";
 import {
   createError,

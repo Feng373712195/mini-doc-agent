@@ -1,4 +1,4 @@
-import { listConversations } from "~~/server/utils/db";
+import { listConversations } from "~~/server/core/database";
 import { defineEventHandler, getQuery } from "h3";
 
 export default defineEventHandler((event) => {

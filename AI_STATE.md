@@ -12,6 +12,9 @@
 - 应用类型：Nuxt 全栈（前端 SSR/CSR + Nitro Server Routes）
 - 前端目录：`app/`（通过 `nuxt.config.ts` 的 `srcDir: "app/"`）
 - 服务端目录：仓库根目录 `server/`（通过 `nuxt.config.ts` 的 `serverDir: "server"`）
+  - `server/api/`：HTTP 端点层
+  - `server/core/`：核心业务层（数据访问、RAG 检索逻辑）
+  - `server/services/`：外部服务封装（LLM、Embedding、向量存储）
 - 数据持久化：SQLite（本地文件，默认在 `data/` 下）
 - RAG：
   - 文档源：`docs/` 下 Markdown
@@ -29,7 +32,6 @@
   - 样式系统：完全符合 rules/style.md 规范
     - 使用 Less 预处理器
     - 所有样式使用 Less 变量（@primary-navy, @space-md 等）
-    - 完全移除 Tailwind CSS 类名
     - 使用 scoped 样式和 Less 嵌套
     - 复用 app.less 全局样式
 - Server API
@@ -50,15 +52,18 @@
   - `npm run typecheck`：通过（已补齐 tsconfig paths，支持 `~~/server/*`）
 
 ### 历史变更
+- Server 目录重构：将 server 层按职责重新组织为 core（核心业务）、services（外部服务）、utils（工具函数）三层架构
+  - `utils/db.ts` → `core/database.ts`（数据访问层）
+  - `utils/rag/retrieve.ts` → `core/retrieval.ts`（RAG 检索业务逻辑）
+  - `utils/llm/chat.ts` → `services/chat.ts`（LLM 服务封装）
+  - `utils/rag/embeddings.ts` → `services/embeddings.ts`（Embedding 服务封装）
+  - `utils/rag/vectorStore.ts` → `services/vectorStore.ts`（向量存储服务封装）
+  - 同步更新测试文件导入路径（`tests/unit/chatStream.test.ts`、`tests/unit/retrieve.test.ts`）
+  - 验证通过：单元测试全部通过（2/2 passed）
 - 结构调整：将前端代码迁移到 `app/` 目录，并通过 `srcDir` 启用（保持 `server/` 在仓库根目录）
 - 修复构建问题：修复了组件内重复 `defineExpose()` 导致的构建失败与 dev 500（IPC closed）
 - 修复类型检查：在 server routes 中使用 `~~/` 根别名，避免 `srcDir` 变更后 TS 路径解析失败
 - 修复 API 路由：修复 `serverDir` 配置，解决 `/api/conversations` 404
-- 修复布局高度问题：将 Grid 布局改为 Flexbox 三段式布局，确保输入框始终可见且固定在底部
-- UI 简化：移除 logo 和副标题，简化界面，整体风格向 ChatGPT 靠拢
-- 设计系统重构：按照 DESIGN.md 的 Verdana Health 设计系统重新设计页面样式
-- 代码规范重构：完全移除内联样式，改用 CSS class
-- 样式架构重构：移除 Tailwind，改用 Less
 
 ## 已知问题
 
