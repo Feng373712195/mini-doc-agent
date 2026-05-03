@@ -52,14 +52,8 @@
   - `npm run typecheck`：通过（已补齐 tsconfig paths，支持 `~~/server/*`）
 
 ### 历史变更
+- Mock 与正式逻辑解耦重构：严格按照 `/rules/code-writing.md` 规范，将 mock 数据和服务从正式逻辑中分离
 - Server 目录重构：将 server 层按职责重新组织为 core（核心业务）、services（外部服务）、utils（工具函数）三层架构
-  - `utils/db.ts` → `core/database.ts`（数据访问层）
-  - `utils/rag/retrieve.ts` → `core/retrieval.ts`（RAG 检索业务逻辑）
-  - `utils/llm/chat.ts` → `services/chat.ts`（LLM 服务封装）
-  - `utils/rag/embeddings.ts` → `services/embeddings.ts`（Embedding 服务封装）
-  - `utils/rag/vectorStore.ts` → `services/vectorStore.ts`（向量存储服务封装）
-  - 同步更新测试文件导入路径（`tests/unit/chatStream.test.ts`、`tests/unit/retrieve.test.ts`）
-  - 验证通过：单元测试全部通过（2/2 passed）
 
 ## 已知问题
 

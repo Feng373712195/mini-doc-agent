@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach } from "vitest";
-import { retrieveContexts } from "../../server/core/retrieval";
+import { getRetrievalService } from "../../server/core/retrieval.factory";
 
 describe("retrieveContexts (mock)", () => {
   beforeEach(() => {
@@ -7,7 +7,8 @@ describe("retrieveContexts (mock)", () => {
   });
 
   it("returns context and matches", async () => {
-    const out = await retrieveContexts("React useEffect", 3);
+    const retrievalService = await getRetrievalService();
+    const out = await retrievalService.retrieveContexts("React useEffect", 3);
     expect(out.matches.length).toBe(3);
     expect(out.context).toContain("片段1");
     expect(out.context).toContain("useEffect");

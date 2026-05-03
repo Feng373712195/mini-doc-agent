@@ -1,6 +1,6 @@
 import { getLatestUserMessage, getMessages, updateMessageContent } from "~~/server/core/database";
-import { retrieveContexts } from "~~/server/core/retrieval";
-import { streamChatText } from "~~/server/services/chat";
+import { getRetrievalService } from "~~/server/core/retrieval.factory";
+import { getChatService } from "~~/server/services/chat.factory";
 import type { Message } from "~~/shared/chat";
 import {
   createError,
@@ -49,7 +49,11 @@ export default defineEventHandler(async (event) => {
     return;
   }
 
-  const { context, matches } = await retrieveContexts(latestUser.content, 3);
+  // 获取服务实例（根据环境变量自动选择 Mock 或真实实现）
+  const retrievalService = await getRetrievalService();
+  const chatService = await getChatService();
+
+  const { context, matches } = await retrievalService.retrieveContexts(latestUser.content, 3);
   const prompt = `你是一个文档问答助手。请严格根据提供的上下文回答。\n如果上下文不足，请明确说“文档中没有足够信息”。\n\n问题：${latestUser.content}\n\n上下文：\n${context}`;
 
   sseWrite(res, "message_start", { assistantMessageId, contexts: matches });
@@ -65,7 +69,7 @@ export default defineEventHandler(async (event) => {
   };
 
   try {
-    for await (const delta of streamChatText(prompt)) {
+    for await (const delta of chatService.streamChatText(prompt)) {
       if (closed) break;
       fullText += delta;
       sseWrite(res, "delta", { text: delta });

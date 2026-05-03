@@ -16,20 +16,6 @@ function normalizeChatBaseUrl(url: string): string {
  * @returns 异步生成器，逐步返回生成的文本片段
  */
 export async function* streamChatText(prompt: string): AsyncGenerator<string> {
-  // Mock 模式：返回预设的测试数据
-  if (process.env.CHAT_MOCK === "1") {
-    const parts = [
-      "useEffect 用于在函数组件中处理副作用。",
-      " 常见场景包括：订阅事件、请求数据、操作 DOM。",
-      " 默认每次渲染后执行，可用依赖数组控制时机。",
-    ];
-    for (const p of parts) {
-      await new Promise((r) => setTimeout(r, 200));
-      yield p;
-    }
-    return;
-  }
-
   const chatApiKey = process.env.CHAT_API_KEY;
   const chatModel = process.env.CHAT_MODEL;
   const chatBaseUrl = process.env.CHAT_BASE_URL;
