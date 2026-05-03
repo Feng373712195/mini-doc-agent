@@ -1,6 +1,7 @@
 import { getLatestUserMessage, getMessages, updateMessageContent } from "~~/server/core/database";
 import { getRetrievalService } from "~~/server/core/retrieval.factory";
 import { getChatService } from "~~/server/services/chat.factory";
+import { loadPrompt } from "~~/server/utils";
 import type { Message } from "~~/shared/chat";
 import {
   createError,
@@ -54,7 +55,10 @@ export default defineEventHandler(async (event) => {
   const chatService = await getChatService();
 
   const { context, matches } = await retrievalService.retrieveContexts(latestUser.content, 3);
-  const prompt = `你是一个文档问答助手。请严格根据提供的上下文回答。\n如果上下文不足，请明确说“文档中没有足够信息”。\n\n问题：${latestUser.content}\n\n上下文：\n${context}`;
+  const promptTemplate = loadPrompt("query/doc_qa");
+  const prompt = promptTemplate
+    .replace("{{question}}", latestUser.content)
+    .replace("{{context}}", context);
 
   sseWrite(res, "message_start", { assistantMessageId, contexts: matches });
 

@@ -52,6 +52,10 @@
   - `npm run typecheck`：通过（已补齐 tsconfig paths，支持 `~~/server/*`）
 
 ### 历史变更
+- **Prompt 抽离重构**（2026-05-03）：按照 `/rules/ai-design.md` 规范，将硬编码的 prompt 字符串抽离到独立文件
+  - 创建 `/prompts/query/doc_qa.md` 存放文档问答 prompt 模板
+  - 实现 `loadPrompt()` 函数用于加载 prompt 文件
+  - 修改 `stream.get.ts` 使用模板和占位符机制（`{{question}}`, `{{context}}`）
 - Mock 与正式逻辑解耦重构：严格按照 `/rules/code-writing.md` 规范，将 mock 数据和服务从正式逻辑中分离
 - Server 目录重构：将 server 层按职责重新组织为 core（核心业务）、services（外部服务）、utils（工具函数）三层架构
 
