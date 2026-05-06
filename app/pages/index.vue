@@ -280,6 +280,7 @@ async function sendMessage(content: string) {
       conversationId,
       role: "assistant",
       content: "",
+      isLoading: true,
       createdAt: ts + 1,
       updatedAt: ts + 1,
     });
@@ -310,11 +311,18 @@ async function sendMessage(content: string) {
       const msg = messages.value.find(
         (m: Message) => m.id === assistantMessageId,
       );
-      if (msg) msg.content += data.text;
+      if (msg) {
+        msg.content += data.text;
+        msg.isLoading = false;
+      }
     });
 
     es.addEventListener("message_end", async () => {
       streaming.value = false;
+      const msg = messages.value.find(
+        (m: Message) => m.id === assistantMessageId,
+      );
+      if (msg) msg.isLoading = false;
       es.close();
       streamSource.value = null;
       await refreshConversations();
@@ -322,6 +330,10 @@ async function sendMessage(content: string) {
 
     es.addEventListener("error", async () => {
       streaming.value = false;
+      const msg = messages.value.find(
+        (m: Message) => m.id === assistantMessageId,
+      );
+      if (msg) msg.isLoading = false;
       es.close();
       streamSource.value = null;
       // Pull latest persisted messages to recover.
@@ -387,8 +399,6 @@ onMounted(async () => {
 </script>
 
 <style lang="less" scoped>
-@import "~/assets/styles/app.less";
-
 /* Main Layout */
 .main-layout {
   height: 100%;

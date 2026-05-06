@@ -73,6 +73,68 @@ body {
 .msg-md {
   color: @text-primary;
 
+  /* 重置 Markdown 渲染后的元素的浏览器默认边距 */
+  p,
+  ul,
+  ol,
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  blockquote,
+  dl,
+  dd {
+    margin: 0;
+  }
+
+  p {
+    margin-bottom: @space-sm;
+  }
+
+  p:last-child {
+    margin-bottom: 0;
+  }
+
+  ul,
+  ol {
+    padding-left: @space-lg;
+    margin-bottom: @space-sm;
+  }
+
+  ul:last-child,
+  ol:last-child {
+    margin-bottom: 0;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    margin-top: @space-md;
+    margin-bottom: @space-sm;
+    font-weight: 600;
+  }
+
+  h1:first-child,
+  h2:first-child,
+  h3:first-child,
+  h4:first-child,
+  h5:first-child,
+  h6:first-child {
+    margin-top: 0;
+  }
+
+  blockquote {
+    border-left: 3px solid @border-default;
+    padding-left: @space-md;
+    margin: @space-sm 0;
+    color: @text-secondary;
+  }
+
   pre {
     background: @primary-navy;
     border: 1px solid @border-default;
@@ -80,6 +142,7 @@ body {
     border-radius: @radius-default;
     overflow: auto;
     color: @surface;
+    margin: @space-sm 0;
   }
 
   code {

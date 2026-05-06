@@ -53,6 +53,7 @@
 
 ### 历史变更
 
+- **MessageBubble isLoading 状态管理**（2026-05-07）：为 Message 添加 isLoading 字段，通过 SSE 事件管理每条消息的 loading 状态，支持多消息并发场景下各自独立显示 spin
 - **历史消息分页加载完善**（2026-05-07）：在 MessageList 组件顶部添加加载更早消息时的 loading 指示器，提升用户交互反馈
 - **Prompt 抽离重构**（2026-05-03）：按照 `/rules/ai-design.md` 规范，将硬编码的 prompt 字符串抽离到独立文件
 - Mock 与正式逻辑解耦重构：严格按照 `/rules/code-writing.md` 规范，将 mock 数据和服务从正式逻辑中分离

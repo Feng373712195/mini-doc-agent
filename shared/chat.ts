@@ -14,5 +14,6 @@ export type Message = {
   content: string;
   createdAt: number;
   updatedAt: number;
+  isLoading?: boolean;
 };
 

@@ -8,7 +8,17 @@ export default defineNuxtConfig({
   // 注意：serverDir 是相对仓库根目录（rootDir）的路径。
   serverDir: "server",
   devtools: { enabled: true },
-  css: ["ant-design-vue/dist/reset.css", "~/assets/styles/app.less"],
+  css: ["ant-design-vue/dist/reset.css"],
+  vite: {
+    css: {
+      preprocessorOptions: {
+        less: {
+          // 自动注入 Less 变量文件到每个组件的 style 中
+          additionalData: '@import "~/assets/styles/app.less";',
+        },
+      },
+    },
+  },
   app: {
     head: {
       title: "RepoMind",

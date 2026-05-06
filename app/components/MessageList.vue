@@ -6,7 +6,11 @@
         <span>Loading older messages...</span>
       </div>
       <div v-for="m in messages" :key="m.id" class="cv-auto message-item">
-        <MessageBubble :role="m.role" :content="m.content" />
+        <MessageBubble
+          :role="m.role"
+          :content="m.content"
+          :isLoading="m.isLoading"
+        />
       </div>
     </div>
   </div>
@@ -113,8 +117,6 @@ defineExpose({ scrollToBottom, getScrollMetrics, setScrollTop });
 </script>
 
 <style lang="less" scoped>
-@import "~/assets/styles/app.less";
-
 .message-list {
   height: 100%;
   overflow: auto;

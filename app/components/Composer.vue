@@ -65,8 +65,6 @@ function onSend() {
 </script>
 
 <style lang="less" scoped>
-@import "~/assets/styles/app.less";
-
 .composer-wrapper {
   max-width: 768px;
   margin: 0 auto;
