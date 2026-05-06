@@ -9,5 +9,6 @@ data/
 playwright-report/
 test-results/
 
+prompts-template.md
 .DS_Store
 

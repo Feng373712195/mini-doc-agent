@@ -11,6 +11,7 @@
 ### 如何加载 Prompt
 
 ```JavaScript
+// loadPrompt函数位置在 /server/utils/index.ts
 const template = loadPrompt("query_rewrite")
 
 const prompt = template.replace("{{query}}", userQuery)

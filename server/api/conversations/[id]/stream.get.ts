@@ -1,4 +1,8 @@
-import { getLatestUserMessage, getMessages, updateMessageContent } from "~~/server/core/database";
+import {
+  getLatestUserMessage,
+  getMessages,
+  updateMessageContent,
+} from "~~/server/core/database";
 import { getRetrievalService } from "~~/server/core/retrieval.factory";
 import { getChatService } from "~~/server/services/chat.factory";
 import { loadPrompt } from "~~/server/utils";
@@ -18,12 +22,19 @@ function sseWrite(res: any, event: string, data: unknown) {
 
 export default defineEventHandler(async (event) => {
   const conversationId = getRouterParam(event, "id");
-  if (!conversationId) throw createError({ statusCode: 400, statusMessage: "Missing conversation id" });
+  if (!conversationId)
+    throw createError({
+      statusCode: 400,
+      statusMessage: "Missing conversation id",
+    });
 
   const query = getQuery(event);
   const assistantMessageId = String(query.assistantMessageId || "");
   if (!assistantMessageId) {
-    throw createError({ statusCode: 400, statusMessage: "Missing assistantMessageId" });
+    throw createError({
+      statusCode: 400,
+      statusMessage: "Missing assistantMessageId",
+    });
   }
 
   setResponseHeaders(event, {
@@ -45,7 +56,9 @@ export default defineEventHandler(async (event) => {
 
   const latestUser = getLatestUserMessage(conversationId);
   if (!latestUser) {
-    sseWrite(res, "error", { message: "No user message found for this conversation." });
+    sseWrite(res, "error", {
+      message: "No user message found for this conversation.",
+    });
     res.end();
     return;
   }
@@ -54,7 +67,10 @@ export default defineEventHandler(async (event) => {
   const retrievalService = await getRetrievalService();
   const chatService = await getChatService();
 
-  const { context, matches } = await retrievalService.retrieveContexts(latestUser.content, 3);
+  const { context, matches } = await retrievalService.retrieveContexts(
+    latestUser.content,
+    3,
+  );
   const promptTemplate = loadPrompt("query/doc_qa");
   const prompt = promptTemplate
     .replace("{{question}}", latestUser.content)
@@ -63,7 +79,9 @@ export default defineEventHandler(async (event) => {
   sseWrite(res, "message_start", { assistantMessageId, contexts: matches });
 
   // Seed assistant content from DB in case of reconnect.
-  const existing = getMessages(conversationId).find((m: Message) => m.id === assistantMessageId);
+  const existing = getMessages(conversationId).find(
+    (m: Message) => m.id === assistantMessageId,
+  );
   let fullText = existing?.content || "";
 
   let lastFlushAt = 0;

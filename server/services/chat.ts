@@ -29,6 +29,7 @@ export async function* streamChatText(prompt: string): AsyncGenerator<string> {
     temperature: 0,
     apiKey: String(chatApiKey),
     configuration: { baseURL: normalizeChatBaseUrl(String(chatBaseUrl)) },
+    timeout: 30000,
   });
 
   // 流式调用 LLM，逐步返回生成的文本片段
