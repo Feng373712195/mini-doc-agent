@@ -52,10 +52,9 @@
   - `npm run typecheck`：通过（已补齐 tsconfig paths，支持 `~~/server/*`）
 
 ### 历史变更
+
+- **历史消息分页加载完善**（2026-05-07）：在 MessageList 组件顶部添加加载更早消息时的 loading 指示器，提升用户交互反馈
 - **Prompt 抽离重构**（2026-05-03）：按照 `/rules/ai-design.md` 规范，将硬编码的 prompt 字符串抽离到独立文件
-  - 创建 `/prompts/query/doc_qa.md` 存放文档问答 prompt 模板
-  - 实现 `loadPrompt()` 函数用于加载 prompt 文件
-  - 修改 `stream.get.ts` 使用模板和占位符机制（`{{question}}`, `{{context}}`）
 - Mock 与正式逻辑解耦重构：严格按照 `/rules/code-writing.md` 规范，将 mock 数据和服务从正式逻辑中分离
 - Server 目录重构：将 server 层按职责重新组织为 core（核心业务）、services（外部服务）、utils（工具函数）三层架构
 
@@ -68,17 +67,11 @@
 
 ## 下一步计划（按优先级）
 
-1. 测试界面功能
-   - 启动开发服务器验证界面正常显示
-   - 测试会话列表、新建会话、消息发送、流式输出等功能
-   - 测试历史消息分页加载
-   - 测试 Sidebar 折叠/展开
-2. 继续完善"历史消息分页加载"
+1. ~~继续完善"历史消息分页加载"~~ ✅ 已完成
    - 目标：超过 50 轮后默认只渲染最新部分；用户上滑触顶自动加载更老消息
    - 行为细节：
      - 初次进入会话：只拉最新 50 条
      - 滚动到顶部阈值（比如 scrollTop < 120）时触发 loadOlder()，每次追加到数组头部
      - 加载后保持当前视口位置不跳（计算加载前后 scrollHeight 差值补偿）
-3. 结合 `content-visibility: auto` 做渲染优化评估与落地（以真实滚动性能为准）
-4. 统一包管理器与工程化规范（pnpm / lint / format / build）
-5. 补齐测试：增加分页/上拉加载与 SSE 流式的自动化测试（unit + e2e，mock 模式可稳定跑通）
+   - 本次新增：加载更早消息时显示顶部 loading 指示器（spin + 文字提示）
+2. 统一包管理器与工程化规范（pnpm / lint / format / build）

@@ -104,8 +104,9 @@
 
 <script setup lang="ts">
 import { computed, nextTick, onMounted, ref, shallowRef } from "vue";
-import { ofetch } from "ofetch";
 import type { Conversation, Message } from "~~/shared/chat";
+
+// 在 Nuxt 3 中，$fetch 是全局自动导入的
 
 const collapsed = ref(false);
 const search = ref("");
@@ -146,10 +147,17 @@ function formatTime(ms: number) {
 }
 
 async function refreshConversations() {
-  conversations.value = await ofetch<Conversation[]>("/api/conversations");
-  if (!activeConversationId.value && conversations.value.length) {
-    const first = conversations.value[0];
-    if (first) await selectConversation(first.id);
+  console.log("[refreshConversations] Starting...");
+  try {
+    console.log("[refreshConversations] Calling $fetch...");
+    conversations.value = await $fetch<Conversation[]>("/api/conversations");
+    console.log("[refreshConversations] Got conversations:", conversations.value.length);
+    if (!activeConversationId.value && conversations.value.length) {
+      const first = conversations.value[0];
+      if (first) await selectConversation(first.id);
+    }
+  } catch (error) {
+    console.error("[refreshConversations] Failed:", error);
   }
 }
 
@@ -157,7 +165,7 @@ async function selectConversation(id: string) {
   stopStream();
   activeConversationId.value = id;
   // Load newest page only; older pages are fetched on-demand.
-  const page = await ofetch<Message[]>(`/api/conversations/${id}/messages?limit=50`);
+  const page = await $fetch<Message[]>(`/api/conversations/${id}/messages?limit=50`);
   messages.value = page;
   hasMoreOlder.value = page.length >= 50;
   await nextTick();
@@ -166,7 +174,7 @@ async function selectConversation(id: string) {
 
 async function onNewChat() {
   stopStream();
-  const convo = await ofetch<Conversation>("/api/conversations", { method: "POST", body: {} });
+  const convo = await $fetch<Conversation>("/api/conversations", { method: "POST", body: {} });
   conversations.value = [convo, ...conversations.value];
   await selectConversation(convo.id);
 }
@@ -184,7 +192,7 @@ function stopStream() {
 
 async function ensureConversation(): Promise<string> {
   if (activeConversationId.value) return activeConversationId.value;
-  const convo = await ofetch<Conversation>("/api/conversations", { method: "POST", body: {} });
+  const convo = await $fetch<Conversation>("/api/conversations", { method: "POST", body: {} });
   conversations.value = [convo, ...conversations.value];
   activeConversationId.value = convo.id;
   messages.value = [];
@@ -199,7 +207,7 @@ async function sendMessage(content: string) {
   try {
     const conversationId = await ensureConversation();
 
-    const { userMessageId, assistantMessageId } = await ofetch<{
+    const { userMessageId, assistantMessageId } = await $fetch<{
       userMessageId: string;
       assistantMessageId: string;
     }>(`/api/conversations/${conversationId}/messages`, {
@@ -264,7 +272,7 @@ async function sendMessage(content: string) {
       es.close();
       streamSource.value = null;
       // Pull latest persisted messages to recover.
-      const page = await ofetch<Message[]>(`/api/conversations/${conversationId}/messages?limit=50`);
+      const page = await $fetch<Message[]>(`/api/conversations/${conversationId}/messages?limit=50`);
       messages.value = page;
       hasMoreOlder.value = page.length >= 50;
     });
@@ -294,7 +302,7 @@ async function loadOlder() {
     const prevScrollTop = metrics?.scrollTop ?? 0;
     const prevScrollHeight = metrics?.scrollHeight ?? 0;
 
-    const older = await ofetch<Message[]>(
+    const older = await $fetch<Message[]>(
       `/api/conversations/${conversationId}/messages?limit=50&before=${encodeURIComponent(String(before))}`
     );
 
@@ -318,7 +326,9 @@ async function loadOlder() {
 }
 
 onMounted(async () => {
+  console.log("[onMounted] Component mounted, calling refreshConversations...");
   await refreshConversations();
+  console.log("[onMounted] refreshConversations completed");
 });
 </script>
 
@@ -452,7 +462,6 @@ onMounted(async () => {
 .message-list-container {
   flex: 1;
   min-height: 0;
-  overflow: hidden;
 }
 
 .composer-container {

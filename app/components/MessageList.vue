@@ -1,11 +1,11 @@
 <template>
   <div ref="parentRef" class="message-list" @scroll="onScroll">
     <div class="message-list-inner">
-      <div
-        v-for="m in messages"
-        :key="m.id"
-        class="cv-auto message-item"
-      >
+      <div v-if="loadingOlder" class="loading-older">
+        <a-spin size="small" />
+        <span>Loading older messages...</span>
+      </div>
+      <div v-for="m in messages" :key="m.id" class="cv-auto message-item">
         <MessageBubble :role="m.role" :content="m.content" />
       </div>
     </div>
@@ -48,7 +48,11 @@ function onScroll() {
   const el = parentRef.value;
   if (!el) return;
 
-  if ((props.hasMoreOlder ?? false) && !(props.loadingOlder ?? false) && el.scrollTop < 120) {
+  if (
+    (props.hasMoreOlder ?? false) &&
+    !(props.loadingOlder ?? false) &&
+    el.scrollTop < 120
+  ) {
     emit("loadOlder");
   }
 
@@ -64,7 +68,7 @@ watch(
     if (!props.follow) return;
     await nextTick();
     scrollToBottom("smooth");
-  }
+  },
 );
 
 watch(
@@ -73,7 +77,7 @@ watch(
     if (!props.follow) return;
     await nextTick();
     requestAnimationFrame(() => scrollToBottom("smooth"));
-  }
+  },
 );
 
 /**
@@ -83,7 +87,11 @@ watch(
 function getScrollMetrics() {
   const el = parentRef.value;
   if (!el) return { scrollTop: 0, scrollHeight: 0, clientHeight: 0 };
-  return { scrollTop: el.scrollTop, scrollHeight: el.scrollHeight, clientHeight: el.clientHeight };
+  return {
+    scrollTop: el.scrollTop,
+    scrollHeight: el.scrollHeight,
+    clientHeight: el.clientHeight,
+  };
 }
 
 function setScrollTop(value: number) {
@@ -115,5 +123,15 @@ defineExpose({ scrollToBottom, getScrollMetrics, setScrollTop });
 
 .message-item {
   padding: @space-md 0;
+}
+
+.loading-older {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: @space-sm;
+  padding: @space-md;
+  color: @text-muted;
+  font-size: 12px;
 }
 </style>
