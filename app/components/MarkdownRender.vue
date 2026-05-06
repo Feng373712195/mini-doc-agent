@@ -7,8 +7,15 @@ import { computed } from "vue";
 import MarkdownIt from "markdown-it";
 import hljs from "highlight.js";
 
+/**
+ * Markdown 渲染组件
+ * - 将 Markdown 文本渲染为 HTML
+ * - 支持代码高亮（highlight.js）
+ * - 支持链接识别和换行转换
+ */
 const props = defineProps<{ content: string }>();
 
+// MarkdownIt 实例：配置链接识别、自动换行、代码高亮
 const md = new MarkdownIt({
   linkify: true,
   breaks: true,
@@ -24,5 +31,6 @@ const md = new MarkdownIt({
   },
 });
 
+// 渲染后的 HTML，通过 v-html 绑定到模板
 const html = computed(() => md.render(props.content || ""));
 </script>

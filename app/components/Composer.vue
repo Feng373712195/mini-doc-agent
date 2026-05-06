@@ -13,18 +13,18 @@
       <div class="composer-footer">
         <span class="composer-hint">Enter 发送，Shift+Enter 换行</span>
         <div class="composer-actions">
-          <a-button 
-            v-if="streaming" 
-            danger 
+          <a-button
+            v-if="streaming"
+            danger
             @click="$emit('stop')"
             class="btn-stop"
           >
             停止
           </a-button>
-          <a-button 
-            data-testid="send-button" 
-            type="primary" 
-            :loading="sending" 
+          <a-button
+            data-testid="send-button"
+            type="primary"
+            :loading="sending"
             @click="onSend"
             class="btn-send"
           >
@@ -39,9 +39,17 @@
 <script setup lang="ts">
 import { ref } from "vue";
 
-// 发送状态（按钮 loading）与流式状态（显示"停止"按钮）
+/**
+ * 消息输入组件
+ * - 提供文本输入框，支持多行输入
+ * - Enter 发送消息，Shift+Enter 换行
+ * - 发送时显示 loading 状态，流式响应时显示"停止"按钮
+ */
 defineProps<{ sending: boolean; streaming: boolean }>();
-const emit = defineEmits<{ (e: "send", content: string): void; (e: "stop"): void }>();
+const emit = defineEmits<{
+  (e: "send", content: string): void;
+  (e: "stop"): void;
+}>();
 
 const draft = ref("");
 
@@ -78,7 +86,9 @@ function onSend() {
 
   &:focus-within {
     border-color: @primary-navy;
-    box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.08), @shadow-default;
+    box-shadow:
+      0 0 0 3px rgba(15, 23, 42, 0.08),
+      @shadow-default;
   }
 }
 

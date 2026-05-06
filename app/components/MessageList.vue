@@ -16,6 +16,12 @@
 import { nextTick, ref, watch } from "vue";
 import type { Message } from "~~/shared/chat";
 
+/**
+ * 消息列表组件
+ * - 展示消息气泡列表
+ * - 支持自动滚动跟随（follow 模式）
+ * - 支持上滑加载更早消息的分页功能
+ */
 const props = defineProps<{
   messages: Message[];
   follow: boolean;
@@ -94,6 +100,9 @@ function getScrollMetrics() {
   };
 }
 
+/**
+ * 设置滚动位置，用于加载更早消息后补偿滚动位置
+ */
 function setScrollTop(value: number) {
   const el = parentRef.value;
   if (!el) return;

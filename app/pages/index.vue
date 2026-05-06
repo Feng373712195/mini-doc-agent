@@ -9,24 +9,22 @@
       :trigger="null"
     >
       <div class="sidebar-header">
-        <div v-if="!collapsed" class="sidebar-title">
-          RepoMind
-        </div>
+        <div v-if="!collapsed" class="sidebar-title">RepoMind</div>
 
         <div class="sidebar-actions">
-          <a-button 
-            data-testid="new-chat" 
-            type="primary" 
-            block 
+          <a-button
+            data-testid="new-chat"
+            type="primary"
+            block
             @click="onNewChat"
             class="btn-new-chat"
           >
             New chat
           </a-button>
-          <a-input 
-            v-if="!collapsed" 
-            v-model:value="search" 
-            placeholder="Search chats" 
+          <a-input
+            v-if="!collapsed"
+            v-model:value="search"
+            placeholder="Search chats"
             allow-clear
             class="input-search"
           />
@@ -41,23 +39,31 @@
         >
           <template #renderItem="{ item }">
             <a-list-item
-              :class="['conversation-item', { active: item.id === activeConversationId }]"
+              :class="[
+                'conversation-item',
+                { active: item.id === activeConversationId },
+              ]"
               @click="selectConversation(item.id)"
             >
               <div class="conversation-item-content">
                 <div class="conversation-title">{{ item.title }}</div>
-                <div class="conversation-time">{{ formatTime(item.updatedAt) }}</div>
+                <div class="conversation-time">
+                  {{ formatTime(item.updatedAt) }}
+                </div>
               </div>
             </a-list-item>
           </template>
         </a-list>
       </div>
 
-      <div 
-        class="sidebar-trigger" 
-        @click="collapsed = !collapsed"
-      >
-        <svg class="sidebar-trigger-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <div class="sidebar-trigger" @click="collapsed = !collapsed">
+        <svg
+          class="sidebar-trigger-icon"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
           <path v-if="!collapsed" d="M15 18l-6-6 6-6" />
           <path v-else d="M9 18l6-6-6-6" />
         </svg>
@@ -69,8 +75,8 @@
         <div class="main-header-title">
           {{ activeTitle || "Chat" }}
         </div>
-        <a-button 
-          v-if="!follow" 
+        <a-button
+          v-if="!follow"
           @click="scrollToBottom"
           class="btn-back-to-bottom"
         >
@@ -90,11 +96,11 @@
           @loadOlder="loadOlder"
           class="message-list-container"
         />
-        <Composer 
-          :sending="sending" 
-          :streaming="streaming" 
-          @send="sendMessage" 
-          @stop="stopStream" 
+        <Composer
+          :sending="sending"
+          :streaming="streaming"
+          @send="sendMessage"
+          @stop="stopStream"
           class="composer-container"
         />
       </a-layout-content>
@@ -106,8 +112,12 @@
 import { computed, nextTick, onMounted, ref, shallowRef } from "vue";
 import type { Conversation, Message } from "~~/shared/chat";
 
-// 在 Nuxt 3 中，$fetch 是全局自动导入的
-
+/**
+ * Chat 主页面
+ * - 左侧边栏：会话列表、新建会话、搜索
+ * - 右侧主区域：消息列表 + 输入框
+ * - SSE 流式接收 AI 回复
+ */
 const collapsed = ref(false);
 const search = ref("");
 const follow = ref(true);
@@ -125,20 +135,34 @@ const hasMoreOlder = ref(false);
 
 const listRef = ref<{
   scrollToBottom: () => void;
-  getScrollMetrics: () => { scrollTop: number; scrollHeight: number; clientHeight: number };
+  getScrollMetrics: () => {
+    scrollTop: number;
+    scrollHeight: number;
+    clientHeight: number;
+  };
   setScrollTop: (value: number) => void;
 } | null>(null);
 
+/**
+ * 当前激活会话的标题
+ */
 const activeTitle = computed(() => {
   const id = activeConversationId.value;
   if (!id) return "";
-  return conversations.value.find((c: Conversation) => c.id === id)?.title || "";
+  return (
+    conversations.value.find((c: Conversation) => c.id === id)?.title || ""
+  );
 });
 
+/**
+ * 根据搜索关键词过滤会话列表
+ */
 const filteredConversations = computed(() => {
   const q = search.value.trim().toLowerCase();
   if (!q) return conversations.value;
-  return conversations.value.filter((c: Conversation) => c.title.toLowerCase().includes(q));
+  return conversations.value.filter((c: Conversation) =>
+    c.title.toLowerCase().includes(q),
+  );
 });
 
 function formatTime(ms: number) {
@@ -146,12 +170,12 @@ function formatTime(ms: number) {
   return d.toLocaleString();
 }
 
+/**
+ * 从服务器刷新会话列表，并自动选中第一个
+ */
 async function refreshConversations() {
-  console.log("[refreshConversations] Starting...");
   try {
-    console.log("[refreshConversations] Calling $fetch...");
     conversations.value = await $fetch<Conversation[]>("/api/conversations");
-    console.log("[refreshConversations] Got conversations:", conversations.value.length);
     if (!activeConversationId.value && conversations.value.length) {
       const first = conversations.value[0];
       if (first) await selectConversation(first.id);
@@ -161,44 +185,70 @@ async function refreshConversations() {
   }
 }
 
+/**
+ * 选中指定会话，加载最新一页消息
+ */
 async function selectConversation(id: string) {
   stopStream();
   activeConversationId.value = id;
   // Load newest page only; older pages are fetched on-demand.
-  const page = await $fetch<Message[]>(`/api/conversations/${id}/messages?limit=50`);
+  const page = await $fetch<Message[]>(
+    `/api/conversations/${id}/messages?limit=50`,
+  );
   messages.value = page;
   hasMoreOlder.value = page.length >= 50;
   await nextTick();
   scrollToBottom();
 }
 
+/**
+ * 创建新会话并切换到该会话
+ */
 async function onNewChat() {
   stopStream();
-  const convo = await $fetch<Conversation>("/api/conversations", { method: "POST", body: {} });
+  const convo = await $fetch<Conversation>("/api/conversations", {
+    method: "POST",
+    body: {},
+  });
   conversations.value = [convo, ...conversations.value];
   await selectConversation(convo.id);
 }
 
+/**
+ * 滚动到底部并启用 follow 模式
+ */
 function scrollToBottom() {
   follow.value = true;
   listRef.value?.scrollToBottom();
 }
 
+/**
+ * 关闭 SSE 连接，清除流式状态
+ */
 function stopStream() {
   streamSource.value?.close();
   streamSource.value = null;
   streaming.value = false;
 }
 
+/**
+ * 确保存在一个激活的会话 ID，若无则创建新会话
+ */
 async function ensureConversation(): Promise<string> {
   if (activeConversationId.value) return activeConversationId.value;
-  const convo = await $fetch<Conversation>("/api/conversations", { method: "POST", body: {} });
+  const convo = await $fetch<Conversation>("/api/conversations", {
+    method: "POST",
+    body: {},
+  });
   conversations.value = [convo, ...conversations.value];
   activeConversationId.value = convo.id;
   messages.value = [];
   return convo.id;
 }
 
+/**
+ * 发送消息：创建用户消息和助手消息占位，通过 SSE 流式接收助手回复
+ */
 async function sendMessage(content: string) {
   if (sending.value) return;
   sending.value = true;
@@ -238,15 +288,16 @@ async function sendMessage(content: string) {
 
     streaming.value = true;
     const es = new EventSource(
-      `/api/conversations/${conversationId}/stream?assistantMessageId=${encodeURIComponent(assistantMessageId)}`
+      `/api/conversations/${conversationId}/stream?assistantMessageId=${encodeURIComponent(assistantMessageId)}`,
     );
     streamSource.value = es;
 
     es.addEventListener("message_start", (evt: MessageEvent) => {
       try {
         const data = JSON.parse(evt.data);
-        // Update title based on first message.
-        const idx = conversations.value.findIndex((c: Conversation) => c.id === conversationId);
+        const idx = conversations.value.findIndex(
+          (c: Conversation) => c.id === conversationId,
+        );
         const row = idx >= 0 ? conversations.value[idx] : undefined;
         if (row && row.title === "New chat") row.title = content.slice(0, 32);
       } catch {
@@ -256,7 +307,9 @@ async function sendMessage(content: string) {
 
     es.addEventListener("delta", (evt: MessageEvent) => {
       const data = JSON.parse(evt.data) as { text: string };
-      const msg = messages.value.find((m: Message) => m.id === assistantMessageId);
+      const msg = messages.value.find(
+        (m: Message) => m.id === assistantMessageId,
+      );
       if (msg) msg.content += data.text;
     });
 
@@ -272,7 +325,9 @@ async function sendMessage(content: string) {
       es.close();
       streamSource.value = null;
       // Pull latest persisted messages to recover.
-      const page = await $fetch<Message[]>(`/api/conversations/${conversationId}/messages?limit=50`);
+      const page = await $fetch<Message[]>(
+        `/api/conversations/${conversationId}/messages?limit=50`,
+      );
       messages.value = page;
       hasMoreOlder.value = page.length >= 50;
     });
@@ -282,7 +337,8 @@ async function sendMessage(content: string) {
 }
 
 /**
- * Load older messages in pages of 50 and prepend them while keeping the viewport stable.
+ * 分页加载更早消息：每次加载 50 条，前插到消息列表头部
+ * 加载后补偿滚动位置，避免视口跳动
  */
 async function loadOlder() {
   if (loadingOlder.value) return;
@@ -303,7 +359,7 @@ async function loadOlder() {
     const prevScrollHeight = metrics?.scrollHeight ?? 0;
 
     const older = await $fetch<Message[]>(
-      `/api/conversations/${conversationId}/messages?limit=50&before=${encodeURIComponent(String(before))}`
+      `/api/conversations/${conversationId}/messages?limit=50&before=${encodeURIComponent(String(before))}`,
     );
 
     if (older.length === 0) {
@@ -326,9 +382,7 @@ async function loadOlder() {
 }
 
 onMounted(async () => {
-  console.log("[onMounted] Component mounted, calling refreshConversations...");
   await refreshConversations();
-  console.log("[onMounted] refreshConversations completed");
 });
 </script>
 
@@ -338,7 +392,7 @@ onMounted(async () => {
 /* Main Layout */
 .main-layout {
   height: 100%;
-  
+
   :deep(.ant-layout) {
     height: 100%;
   }
@@ -359,7 +413,7 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   position: relative;
-  
+
   :deep(.ant-list) {
     background: transparent;
   }
@@ -374,7 +428,7 @@ onMounted(async () => {
   font-size: 20px;
   font-weight: 600;
   margin-bottom: @space-lg;
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: "Plus Jakarta Sans", sans-serif;
   color: @text-primary;
 }
 
@@ -444,7 +498,7 @@ onMounted(async () => {
 .main-header-title {
   font-size: 16px;
   font-weight: 600;
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: "Plus Jakarta Sans", sans-serif;
   color: @text-primary;
 }
 
