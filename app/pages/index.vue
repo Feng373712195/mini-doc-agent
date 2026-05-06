@@ -19,7 +19,7 @@
             @click="onNewChat"
             class="btn-new-chat"
           >
-            New chat
+            新对话
           </a-button>
           <a-input
             v-if="!collapsed"
@@ -80,7 +80,7 @@
           @click="scrollToBottom"
           class="btn-back-to-bottom"
         >
-          Back to bottom
+          返回顶部
         </a-button>
       </a-layout-header>
 
