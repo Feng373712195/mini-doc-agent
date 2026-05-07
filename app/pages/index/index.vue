@@ -111,6 +111,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, ref, shallowRef } from "vue";
 import type { Conversation, Message } from "~~/shared/chat";
+import { useMessages } from "./composables/useMessages";
 
 /**
  * Chat 主页面
@@ -124,14 +125,18 @@ const follow = ref(true);
 
 const conversations = ref<Conversation[]>([]);
 const activeConversationId = ref<string | null>(null);
-const messages = ref<Message[]>([]);
 
 const sending = ref(false);
 const streaming = ref(false);
 const streamSource = shallowRef<EventSource | null>(null);
 
-const loadingOlder = ref(false);
-const hasMoreOlder = ref(false);
+const {
+  messages,
+  hasMoreOlder,
+  loadingOlder,
+  loadMessages,
+  loadOlderMessages,
+} = useMessages();
 
 const listRef = ref<{
   scrollToBottom: () => void;
@@ -191,12 +196,7 @@ async function refreshConversations() {
 async function selectConversation(id: string) {
   stopStream();
   activeConversationId.value = id;
-  // Load newest page only; older pages are fetched on-demand.
-  const page = await $fetch<Message[]>(
-    `/api/conversations/${id}/messages?limit=50`,
-  );
-  messages.value = page;
-  hasMoreOlder.value = page.length >= 50;
+  await loadMessages(id);
   await nextTick();
   scrollToBottom();
 }
@@ -265,7 +265,6 @@ async function sendMessage(content: string) {
       body: { content },
     });
 
-    // Optimistic render: append user + assistant placeholder.
     const ts = Date.now();
     messages.value.push({
       id: userMessageId,
@@ -336,12 +335,7 @@ async function sendMessage(content: string) {
       if (msg) msg.isLoading = false;
       es.close();
       streamSource.value = null;
-      // Pull latest persisted messages to recover.
-      const page = await $fetch<Message[]>(
-        `/api/conversations/${conversationId}/messages?limit=50`,
-      );
-      messages.value = page;
-      hasMoreOlder.value = page.length >= 50;
+      await loadMessages(conversationId);
     });
   } finally {
     sending.value = false;
@@ -353,44 +347,26 @@ async function sendMessage(content: string) {
  * 加载后补偿滚动位置，避免视口跳动
  */
 async function loadOlder() {
-  if (loadingOlder.value) return;
-  if (!hasMoreOlder.value) return;
   const conversationId = activeConversationId.value;
   if (!conversationId) return;
 
   const first = messages.value[0];
   if (!first) return;
 
-  loadingOlder.value = true;
-  follow.value = false; // user is browsing history
+  const metrics = listRef.value?.getScrollMetrics();
+  const prevScrollTop = metrics?.scrollTop ?? 0;
+  const prevScrollHeight = metrics?.scrollHeight ?? 0;
 
-  try {
-    const before = first.createdAt;
-    const metrics = listRef.value?.getScrollMetrics();
-    const prevScrollTop = metrics?.scrollTop ?? 0;
-    const prevScrollHeight = metrics?.scrollHeight ?? 0;
+  follow.value = false;
 
-    const older = await $fetch<Message[]>(
-      `/api/conversations/${conversationId}/messages?limit=50&before=${encodeURIComponent(String(before))}`,
-    );
+  await loadOlderMessages(conversationId);
 
-    if (older.length === 0) {
-      hasMoreOlder.value = false;
-      return;
-    }
+  await nextTick();
 
-    messages.value = [...older, ...messages.value];
-    if (older.length < 50) hasMoreOlder.value = false;
-
-    await nextTick();
-
-    const metrics2 = listRef.value?.getScrollMetrics();
-    const newScrollHeight = metrics2?.scrollHeight ?? prevScrollHeight;
-    const delta = newScrollHeight - prevScrollHeight;
-    listRef.value?.setScrollTop(prevScrollTop + delta);
-  } finally {
-    loadingOlder.value = false;
-  }
+  const metrics2 = listRef.value?.getScrollMetrics();
+  const newScrollHeight = metrics2?.scrollHeight ?? prevScrollHeight;
+  const delta = newScrollHeight - prevScrollHeight;
+  listRef.value?.setScrollTop(prevScrollTop + delta);
 }
 
 onMounted(async () => {
@@ -399,7 +375,6 @@ onMounted(async () => {
 </script>
 
 <style lang="less" scoped>
-/* Main Layout */
 .main-layout {
   height: 100%;
 
@@ -414,7 +389,6 @@ onMounted(async () => {
   height: 100%;
 }
 
-/* Sidebar */
 .sidebar {
   background: @surface;
   border-right: 1px solid @border-default;
@@ -454,7 +428,6 @@ onMounted(async () => {
   padding: 0 @space-sm @space-md;
 }
 
-/* Conversation item */
 .conversation-item {
   border-radius: @radius-default;
   margin: @space-xs 0;
@@ -493,7 +466,6 @@ onMounted(async () => {
   color: @text-muted;
 }
 
-/* Main header */
 .main-header {
   background: @surface;
   border-bottom: 1px solid @border-default;
@@ -512,7 +484,6 @@ onMounted(async () => {
   color: @text-primary;
 }
 
-/* Main Content - 关键修复：使用 Flexbox 三段式布局 */
 .main-content {
   display: flex;
   flex-direction: column;
@@ -532,7 +503,6 @@ onMounted(async () => {
   flex-shrink: 0;
 }
 
-/* Buttons */
 .btn-new-chat {
   height: 42px;
   font-size: 14px;
@@ -547,7 +517,6 @@ onMounted(async () => {
   border-radius: @radius-default;
 }
 
-/* Sidebar trigger */
 .sidebar-trigger {
   position: absolute;
   top: 16px;
