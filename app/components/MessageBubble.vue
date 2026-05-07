@@ -7,12 +7,12 @@
       class="chat-bubble"
       :class="role === 'user' ? 'bubble-user' : 'bubble-assistant'"
     >
-      <div v-if="showSpin" class="loading-spin">
+      <!-- <div v-if="showSpin" class="loading-spin">
         <a-spin />
       </div>
       <template v-else>
         <MarkdownRender v-if="content" :content="content" />
-      </template>
+      </template> -->
       <div v-if="role === 'user'">{{ content }}</div>
     </div>
   </div>

@@ -3,7 +3,7 @@
     <div class="message-list-inner">
       <div v-if="loadingOlder" class="loading-older">
         <a-spin size="small" />
-        <span>Loading older messages...</span>
+        <span>加载更早消息...</span>
       </div>
       <div v-for="m in messages" :key="m.id" class="cv-auto message-item">
         <MessageBubble
