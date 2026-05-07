@@ -4,3 +4,26 @@
 - AI请求必须走 /server/api
 - 业务逻辑必须在 server 层
 - 前端只负责展示
+- 页面结构
+  - pages/
+    - xxx/
+      - index.vue
+      - components/ # 页面专属组件
+      - composables/ # 页面逻辑拆分
+      - utils/ # 页面纯函数工具
+- composables 规则
+  - 统一命名：useXxx.ts
+  - 只负责状态/逻辑/副作用
+  - 不允许包含 UI
+- components 规则
+  - 页面组件必须放在 page/components
+  - 组件拆分优先扁平化
+  - 禁止深层嵌套 components/components
+- 复用规则
+  - 优先 page 内就地拆分
+  - 多页面复用 → 提升到 composables/
+  - 多业务复用 → 才进 shared/
+- 核心原则（重要）
+  - 就近优先（Locality First）
+  - 复用驱动抽象，而不是提前抽象
+  - 结构服务于“可读性 + AI 可理解性”
