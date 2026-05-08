@@ -18,6 +18,9 @@ export default defineNuxtConfig({
         },
       },
     },
+    optimizeDeps: {
+      include: ["@ant-design/icons-vue"],
+    },
   },
   app: {
     head: {

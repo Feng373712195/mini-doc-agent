@@ -53,6 +53,14 @@
 
 ### 历史变更
 
+- **文档管理弹窗功能开发**（2026-05-09）：
+  - 创建 DocsModal 主弹窗组件，包含三个视图切换
+  - ListView：文档列表表格（带分页）
+  - UploadTypesView：上传方式选择（Github、PDF、Word，正方形按钮+Antd图标）
+  - UploadView：具体上传界面（输入框+校验，Antd Upload组件）
+  - 在 index.vue 中集成，绑定「查看文档」按钮
+  - 弹窗尺寸：宽度600px，高度500px，切换视图时保持高度不变
+  - 问题：@ant-design/icons-vue 导入触发 IPC connection closed 错误，已在 nuxt.config.ts 配置 vite.optimizeDeps.include，但问题仍存在
 - **MessageBubble isLoading 状态管理**（2026-05-07）：为 Message 添加 isLoading 字段，通过 SSE 事件管理每条消息的 loading 状态，支持多消息并发场景下各自独立显示 spin
 - **历史消息分页加载完善**（2026-05-07）：在 MessageList 组件顶部添加加载更早消息时的 loading 指示器，提升用户交互反馈
 - **Prompt 抽离重构**（2026-05-03）：按照 `/rules/ai-design.md` 规范，将硬编码的 prompt 字符串抽离到独立文件
@@ -65,8 +73,13 @@
   - `AGENTS.md` 中约束包管理器为 pnpm，但当前项目脚本仍以 npm 为主（需要决定是否切换为 pnpm，并统一 README/脚本）
 - 网络不稳定：
   - GitHub push 偶发 `Connection was reset`，目前通过重试可成功
+- @ant-design/icons-vue 导入问题：
+  - 在 Nuxt 3 中导入 @ant-design/icons-vue 触发 IPC connection closed 错误
+  - 已尝试在 nuxt.config.ts 配置 vite.optimizeDeps.include，但问题仍存在
+  - 可能需要后续进一步排查或改用其他图标方案
 
 ## 下一步计划（按优先级）
 
-1. 统一包管理器与工程化规范（pnpm / lint / format / build）
-2. 弹窗功能设计与制作
+1. 解决 @ant-design/icons-vue 导入问题（或改用其他图标方案）
+2. 统一包管理器与工程化规范（pnpm / lint / format / build）
+3. 完善文档管理弹窗功能（接入真实数据、上传逻辑）

@@ -75,13 +75,19 @@
         <div class="main-header-title">
           {{ activeTitle || "Chat" }}
         </div>
-        <a-button
-          v-if="!follow"
-          @click="scrollToBottom"
-          class="btn-back-to-bottom"
-        >
-          返回底部
-        </a-button>
+        <div class="btns">
+          <a-button
+            v-if="!follow"
+            @click="scrollToBottom"
+            class="btn-back-to-bottom"
+          >
+            返回底部
+          </a-button>
+          <a-button class="btn-docs" @click="showDocsModal = true">
+            查看文档
+          </a-button>
+          <DocsModal v-model:open="showDocsModal" />
+        </div>
       </a-layout-header>
 
       <a-layout-content class="main-content">
@@ -112,6 +118,7 @@
 import { computed, nextTick, onMounted, ref, shallowRef } from "vue";
 import type { Conversation, Message } from "~~/shared/chat";
 import { useMessages } from "./composables/useMessages";
+import DocsModal from "./components/DocsModal/index.vue";
 
 /**
  * Chat 主页面
@@ -122,6 +129,7 @@ import { useMessages } from "./composables/useMessages";
 const collapsed = ref(false);
 const search = ref("");
 const follow = ref(true);
+const showDocsModal = ref(false);
 
 const conversations = ref<Conversation[]>([]);
 const activeConversationId = ref<string | null>(null);
@@ -545,9 +553,14 @@ onMounted(async () => {
   height: 16px;
 }
 
-.btn-back-to-bottom {
+.btn-back-to-bottom,
+.btn-docs {
   height: 36px;
   font-size: 14px;
   border-radius: @radius-default;
+}
+
+.btn-docs {
+  margin-left: @space-md;
 }
 </style>
