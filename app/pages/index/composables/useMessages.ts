@@ -1,6 +1,8 @@
 import { ref } from "vue";
 import type { Message } from "~~/shared/chat";
 
+const MESSAGE_PAGE_SIZE = 50;
+
 export function useMessages() {
   const messages = ref<Message[]>([]);
   const hasMoreOlder = ref(false);
@@ -11,10 +13,10 @@ export function useMessages() {
    */
   async function loadMessages(conversationId: string) {
     const page = await $fetch<Message[]>(
-      `/api/conversations/${conversationId}/messages?limit=50`,
+      `/api/conversations/${conversationId}/messages?limit=${MESSAGE_PAGE_SIZE}`,
     );
     messages.value = page;
-    hasMoreOlder.value = page.length >= 50;
+    hasMoreOlder.value = page.length >= MESSAGE_PAGE_SIZE;
     return page;
   }
 
@@ -32,7 +34,7 @@ export function useMessages() {
     try {
       const before = first.createdAt;
       const older = await $fetch<Message[]>(
-        `/api/conversations/${conversationId}/messages?limit=50&before=${encodeURIComponent(String(before))}`,
+        `/api/conversations/${conversationId}/messages?limit=${MESSAGE_PAGE_SIZE}&before=${encodeURIComponent(String(before))}`,
       );
 
       if (older.length === 0) {
@@ -41,7 +43,7 @@ export function useMessages() {
       }
 
       messages.value = [...older, ...messages.value];
-      if (older.length < 50) hasMoreOlder.value = false;
+      if (older.length < MESSAGE_PAGE_SIZE) hasMoreOlder.value = false;
 
       return older;
     } finally {
