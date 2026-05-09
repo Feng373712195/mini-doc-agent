@@ -1,6 +1,11 @@
 <template>
   <div class="list-view">
-    <a-table :columns="columns" :data-source="data" :pagination="pagination" :scroll="{ y: 320 }" />
+    <a-table
+      :columns="columns"
+      :data-source="data"
+      :pagination="pagination"
+      :scroll="{ y: 320 }"
+    />
   </div>
 </template>
 

@@ -24,11 +24,16 @@
         :file-list="pdfFileList"
         @change="handlePdfChange"
         accept=".pdf"
+        :multiple="false"
+        :max-count="1"
+        :directory="false"
+        :open-file-dialog-on-click="true"
       >
-        <a-button>
-          <UploadOutlined />
-          选择PDF文件
-        </a-button>
+        <div class="upload-dragger">
+          <UploadOutlined class="upload-icon" />
+          <p class="upload-text">点击或拖拽文件到此处上传</p>
+          <p class="upload-hint">支持单个 PDF 文件</p>
+        </div>
       </a-upload>
       <div v-if="pdfError" class="error-text">{{ pdfError }}</div>
     </div>
@@ -40,11 +45,16 @@
         :file-list="wordFileList"
         @change="handleWordChange"
         accept=".doc,.docx"
+        :multiple="false"
+        :max-count="1"
+        :directory="false"
+        :open-file-dialog-on-click="true"
       >
-        <a-button>
-          <UploadOutlined />
-          选择Word文件
-        </a-button>
+        <div class="upload-dragger">
+          <UploadOutlined class="upload-icon" />
+          <p class="upload-text">点击或拖拽文件到此处上传</p>
+          <p class="upload-hint">支持单个 Word 文件</p>
+        </div>
       </a-upload>
       <div v-if="wordError" class="error-text">{{ wordError }}</div>
     </div>
@@ -57,7 +67,7 @@ import { UploadOutlined } from "@ant-design/icons-vue";
 import type { UploadProps, UploadFile } from "ant-design-vue";
 
 const props = defineProps<{
-  type: "github" | "pdf" | "word";
+  type: "github" | "pdf" | "word" | null;
 }>();
 
 const githubUrl = ref("");
@@ -123,12 +133,53 @@ const handleWordChange: UploadProps["onChange"] = (info) => {
 <style lang="less" scoped>
 .upload-view {
   height: 100%;
-  padding-top: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
-  .github-upload,
-  .file-upload {
+  .github-upload {
+    width: 100%;
     max-width: 400px;
-    margin: 0 auto;
+  }
+
+  .file-upload {
+    width: 100%;
+    max-width: 400px;
+  }
+
+  .upload-dragger {
+    border: 2px dashed #d9d9d9;
+    border-radius: 8px;
+    padding: 40px 20px;
+    text-align: center;
+    transition: all 0.3s ease;
+    cursor: pointer;
+
+    &:hover {
+      border-color: #1890ff;
+      background: #f6ffed;
+    }
+
+    &:active {
+      border-color: #1890ff;
+    }
+  }
+
+  .upload-icon {
+    font-size: 48px;
+    color: #999;
+    margin-bottom: 16px;
+  }
+
+  .upload-text {
+    font-size: 16px;
+    color: #666;
+    margin-bottom: 8px;
+  }
+
+  .upload-hint {
+    font-size: 12px;
+    color: #999;
   }
 
   .error-text {

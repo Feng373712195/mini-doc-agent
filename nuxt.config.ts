@@ -2,6 +2,7 @@ import { defineNuxtConfig } from "nuxt/config";
 import { resolve } from "node:path";
 
 export default defineNuxtConfig({
+  ssr: false,
   // 将前端源代码收敛到 app/ 目录，方便开源与维护（目录结构以 README 为准）。
   srcDir: "app/",
   // server/ 保持在仓库根目录（README 结构要求）。
@@ -17,9 +18,6 @@ export default defineNuxtConfig({
           additionalData: '@import "~/assets/styles/app.less";',
         },
       },
-    },
-    optimizeDeps: {
-      include: ["@ant-design/icons-vue"],
     },
   },
   app: {

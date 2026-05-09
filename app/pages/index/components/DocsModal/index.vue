@@ -1,31 +1,36 @@
 <template>
   <a-modal
-    v-model:open="open"
+    v-model:open="isOpen"
     title="文档管理"
     :width="600"
     :footer="null"
-    :body-style="{ height: '500px', padding: '0' }"
+    :body-style="{ height: '350px', padding: '0' }"
     @cancel="onCancel"
   >
     <div class="docs-modal">
-      <!-- 顶部操作区 -->
-      <div class="modal-header">
-        <a-button v-if="currentView !== 'list'" @click="goBack">返回</a-button>
-        <a-button v-else type="primary" @click="goToUploadTypes">上传文档</a-button>
-      </div>
-
       <!-- 内容区 -->
       <div class="modal-content">
         <ListView v-if="currentView === 'list'" />
-        <UploadTypesView v-else-if="currentView === 'upload-types'" @select="onSelectType" />
+        <UploadTypesView
+          v-else-if="currentView === 'upload-types'"
+          @select="onSelectType"
+        />
         <UploadView v-else-if="currentView === 'upload'" :type="uploadType" />
+      </div>
+
+      <!-- 顶部操作区 -->
+      <div class="modal-footer">
+        <a-button v-if="currentView !== 'list'" @click="goBack">返回</a-button>
+        <a-button v-else type="primary" @click="goToUploadTypes"
+          >上传文档</a-button
+        >
       </div>
     </div>
   </a-modal>
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import ListView from "./ListView.vue";
 import UploadTypesView from "./UploadTypesView.vue";
 import UploadView from "./UploadView.vue";
@@ -37,6 +42,11 @@ const props = defineProps<{
 const emit = defineEmits<{
   "update:open": [value: boolean];
 }>();
+
+const isOpen = computed({
+  get: () => props.open,
+  set: (value) => emit("update:open", value),
+});
 
 type ViewType = "list" | "upload-types" | "upload";
 const currentView = ref<ViewType>("list");
@@ -57,7 +67,9 @@ function onSelectType(type: "github" | "pdf" | "word") {
 function goBack() {
   if (viewHistory.value.length > 1) {
     viewHistory.value.pop();
-    currentView.value = viewHistory.value[viewHistory.value.length - 1];
+    currentView.value = viewHistory.value[
+      viewHistory.value.length - 1
+    ] as ViewType;
     if (currentView.value === "list") {
       uploadType.value = null;
     }
@@ -79,16 +91,26 @@ function onCancel() {
   display: flex;
   flex-direction: column;
 
-  .modal-header {
-    padding: 16px 24px;
-    border-bottom: 1px solid #f0f0f0;
-    flex-shrink: 0;
-  }
-
   .modal-content {
     flex: 1;
     padding: 16px 24px;
     overflow: hidden;
+  }
+
+  .modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    padding: 12px 24px;
+    border-top: 1px solid #f0f0f0;
+    background: #ffffff;
+
+    :deep(.ant-btn) {
+      margin-left: 8px;
+
+      &:first-child {
+        margin-left: 0;
+      }
+    }
   }
 }
 </style>
