@@ -1,6 +1,7 @@
 import path from "node:path";
 import { Chroma } from "@langchain/community/vectorstores/chroma";
 import { Document } from "@langchain/core/documents";
+import type { Where } from "chromadb";
 import { createEmbeddings } from "~~/server/services/embeddings";
 import type { IngestionChunk } from "~~/server/ingestion/chunks/chunkDocuments";
 
@@ -47,14 +48,14 @@ async function getChromaStore() {
   return vectorStorePromise;
 }
 
-function buildFilter(filter?: SearchFilter) {
+function buildFilter(filter?: SearchFilter): Where | undefined {
   if (!filter) return undefined;
   const result: Record<string, unknown> = {};
   if (filter.documentId) result.documentId = filter.documentId;
   if (filter.sourceType) result.sourceType = filter.sourceType;
   if (typeof filter.branch === "string") result.branch = filter.branch;
   if (filter.type) result.type = filter.type;
-  return Object.keys(result).length ? result : undefined;
+  return Object.keys(result).length ? (result as Where) : undefined;
 }
 
 export async function getVectorStoreService(): Promise<VectorStoreService> {
