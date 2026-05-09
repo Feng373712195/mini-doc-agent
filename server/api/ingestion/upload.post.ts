@@ -2,6 +2,7 @@ import { nanoid } from "nanoid";
 import { createError, defineEventHandler, readMultipartFormData } from "h3";
 import { createDocument } from "~~/server/core/database";
 import { runIngestionJob } from "~~/server/services/ingestionJobs";
+import { runUploadIngestion, saveUploadFile } from "~~/server/ingestion/runUploadIngestion";
 import type { IngestionUploadResponse, IngestionUploadType } from "~~/shared/ingestion";
 
 type FormPart = {
@@ -61,7 +62,13 @@ export default defineEventHandler(async (event): Promise<IngestionUploadResponse
       ingestionJobId,
       documentId: document.documentId,
       task: async (emitStage) => {
-        emitStage("parsing", 20, "github source accepted");
+        await runUploadIngestion({
+          type: "github",
+          documentId: document.documentId,
+          repoUrl,
+          branch,
+          onStage: (stage, progress) => emitStage(stage, progress, stage),
+        });
       },
     });
 
@@ -91,11 +98,23 @@ export default defineEventHandler(async (event): Promise<IngestionUploadResponse
     ingestionJobId,
   });
 
+  const filePath = await saveUploadFile({
+    ingestionJobId,
+    filename: filePart.filename,
+    data: filePart.data,
+  });
+
   void runIngestionJob({
     ingestionJobId,
     documentId: document.documentId,
     task: async (emitStage) => {
-      emitStage("parsing", 20, `${type} file accepted`);
+      await runUploadIngestion({
+        type,
+        documentId: document.documentId,
+        filePath,
+        fileBuffer: filePart.data,
+        onStage: (stage, progress) => emitStage(stage, progress, stage),
+      });
     },
   });
 
