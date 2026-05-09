@@ -43,13 +43,32 @@ const data = ref([
     type: "Word",
     time: "2024-01-02 14:30",
   },
+  {
+    key: "2",
+    name: "示例文档2.docx",
+    type: "Word",
+    time: "2024-01-02 14:30",
+  },
+  {
+    key: "2",
+    name: "示例文档2.docx",
+    type: "Word",
+    time: "2024-01-02 14:30",
+  },
+  {
+    key: "2",
+    name: "示例文档2.docx",
+    type: "Word",
+    time: "2024-01-02 14:30",
+  },
 ]);
 
 const pagination = {
   current: 1,
-  pageSize: 10,
-  total: 2,
+  pageSize: 3,
+  total: data.value.length,
   showSizeChanger: false,
+  position: ["bottomCenter"],
 };
 </script>
 

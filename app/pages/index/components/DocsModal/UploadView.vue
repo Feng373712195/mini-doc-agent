@@ -12,7 +12,9 @@
           <div v-if="urlError" class="error-text">{{ urlError }}</div>
         </a-form-item>
         <a-form-item>
-          <a-button type="primary" @click="onGithubUpload">上传</a-button>
+          <div class="btn-warp">
+            <a-button type="primary" @click="onGithubUpload">上传</a-button>
+          </div>
         </a-form-item>
       </a-form>
     </div>
@@ -137,9 +139,17 @@ const handleWordChange: UploadProps["onChange"] = (info) => {
   align-items: center;
   justify-content: center;
 
+  :deep(.ant-upload) {
+    width: 100%;
+  }
+
   .github-upload {
     width: 100%;
     max-width: 400px;
+    .btn-warp {
+      display: flex;
+      justify-content: center;
+    }
   }
 
   .file-upload {
