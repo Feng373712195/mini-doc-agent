@@ -29,6 +29,11 @@
 
 ## 本轮已完成任务
 
+- 任务7：旧 ingest/HNSW 链路清理（2026-05-10）
+  - 移除 scripts/ingest.ts 与 package.json 中 ingest 脚本
+  - 移除 hnswlib-node 可选依赖，补充 chromadb 依赖
+  - 根 README.md 已改为统一上传 + ingestion job 进度订阅流程
+
 - 任务1：文档数据层重构
   - 新增 `shared/document.ts`
   - `server/core/database.ts` 增加 documents 表、索引、状态流转与 CRUD
@@ -50,10 +55,11 @@
 
 - 由于当前环境 `npm.ps1` 执行策略限制，`npm run typecheck` 需通过 `cmd /c npm run ...` 执行。
 - Chroma 连接依赖服务可用性（默认 `http://localhost:8000`），需在下一轮补齐本地持久化运行说明与启动方案。
-- 根 `README.md` 仍需按新 ingestion 流程重写（进行中）。
+- 前端文档管理弹窗尚未接入上传接口与 SSE 进度展示。
 
 ## 下一步计划
 
-1. 清理旧 ingest/HNSW 逻辑（脚本、依赖、文档）
-2. 补齐上传进度与文档状态的前端接入
-3. 增强错误处理与重试策略（上传、解析、入库）
+1. 补齐上传进度与文档状态的前端接入
+2. 增强错误处理与重试策略（上传、解析、入库）
+3. 增加 ingestion 链路单元测试与集成测试
+

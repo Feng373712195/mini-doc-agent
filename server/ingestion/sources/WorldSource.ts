@@ -1,1 +1,1 @@
-export { WordSource } from "~~/server/ingestion/sources/WordSource";
+﻿export { WordSource } from "~~/server/ingestion/sources/WordSource";
