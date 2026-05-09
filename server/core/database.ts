@@ -3,6 +3,12 @@ import fs from "node:fs";
 import path from "node:path";
 import { nanoid } from "nanoid";
 import type { Conversation, Message, Role } from "~~/shared/chat";
+import type {
+  CreateDocumentInput,
+  DocumentRecord,
+  DocumentStatus,
+  UpdateDocumentInput,
+} from "~~/shared/document";
 
 // 数据库单例
 let dbSingleton: Database.Database | null = null;
@@ -54,6 +60,31 @@ export function getDb() {
     );
     CREATE INDEX IF NOT EXISTS idx_messages_conversation_id_created_at
       ON messages(conversation_id, created_at);
+    CREATE TABLE IF NOT EXISTS documents (
+      document_id TEXT PRIMARY KEY,
+      title TEXT NOT NULL,
+      source_type TEXT NOT NULL,
+      source_path TEXT,
+      repo TEXT,
+      branch TEXT,
+      content_hash TEXT,
+      commit_hash TEXT,
+      version TEXT,
+      status TEXT NOT NULL,
+      chunk_count INTEGER NOT NULL DEFAULT 0,
+      error_message TEXT,
+      ingestion_job_id TEXT,
+      created_at INTEGER NOT NULL,
+      updated_at INTEGER NOT NULL,
+      last_ingested_at INTEGER,
+      deleted_at INTEGER
+    );
+    CREATE INDEX IF NOT EXISTS idx_documents_source_type_source_path_branch
+      ON documents(source_type, source_path, branch);
+    CREATE INDEX IF NOT EXISTS idx_documents_status
+      ON documents(status);
+    CREATE INDEX IF NOT EXISTS idx_documents_updated_at
+      ON documents(updated_at DESC);
   `);
   dbSingleton = db;
   return dbSingleton;
@@ -226,4 +257,170 @@ export function getLatestUserMessage(conversationId: string): Message | null {
     )
     .get(conversationId) as Message | undefined;
   return row || null;
+}
+
+function mapDocumentRow(row: any): DocumentRecord {
+  return {
+    documentId: row.documentId,
+    title: row.title,
+    sourceType: row.sourceType,
+    sourcePath: row.sourcePath,
+    repo: row.repo,
+    branch: row.branch,
+    contentHash: row.contentHash,
+    commitHash: row.commitHash,
+    version: row.version,
+    status: row.status,
+    chunkCount: row.chunkCount,
+    errorMessage: row.errorMessage,
+    ingestionJobId: row.ingestionJobId,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+    lastIngestedAt: row.lastIngestedAt,
+    deletedAt: row.deletedAt,
+  };
+}
+
+export function createDocument(input: CreateDocumentInput): DocumentRecord {
+  const db = getDb();
+  const ts = nowMs();
+  const documentId = nanoid();
+  db.prepare(
+    `INSERT INTO documents(
+      document_id, title, source_type, source_path, repo, branch, content_hash, commit_hash,
+      version, status, chunk_count, error_message, ingestion_job_id, created_at, updated_at,
+      last_ingested_at, deleted_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, NULL, ?, ?, ?, NULL, NULL)`
+  ).run(
+    documentId,
+    input.title,
+    input.sourceType,
+    input.sourcePath ?? null,
+    input.repo ?? null,
+    input.branch ?? null,
+    input.contentHash ?? null,
+    input.commitHash ?? null,
+    input.version ?? null,
+    input.status,
+    input.ingestionJobId ?? null,
+    ts,
+    ts
+  );
+  return getDocumentById(documentId)!;
+}
+
+export function getDocumentById(documentId: string): DocumentRecord | null {
+  const db = getDb();
+  const row = db
+    .prepare(
+      `SELECT
+        document_id as documentId,
+        title,
+        source_type as sourceType,
+        source_path as sourcePath,
+        repo,
+        branch,
+        content_hash as contentHash,
+        commit_hash as commitHash,
+        version,
+        status,
+        chunk_count as chunkCount,
+        error_message as errorMessage,
+        ingestion_job_id as ingestionJobId,
+        created_at as createdAt,
+        updated_at as updatedAt,
+        last_ingested_at as lastIngestedAt,
+        deleted_at as deletedAt
+      FROM documents WHERE document_id=?`
+    )
+    .get(documentId) as any;
+  return row ? mapDocumentRow(row) : null;
+}
+
+export function getDocumentBySource(params: {
+  sourceType: string;
+  sourcePath: string | null;
+  branch: string | null;
+}): DocumentRecord | null {
+  const db = getDb();
+  const row = db
+    .prepare(
+      `SELECT
+        document_id as documentId,
+        title,
+        source_type as sourceType,
+        source_path as sourcePath,
+        repo,
+        branch,
+        content_hash as contentHash,
+        commit_hash as commitHash,
+        version,
+        status,
+        chunk_count as chunkCount,
+        error_message as errorMessage,
+        ingestion_job_id as ingestionJobId,
+        created_at as createdAt,
+        updated_at as updatedAt,
+        last_ingested_at as lastIngestedAt,
+        deleted_at as deletedAt
+      FROM documents
+      WHERE source_type = ?
+        AND ((source_path IS NULL AND ? IS NULL) OR source_path = ?)
+        AND ((branch IS NULL AND ? IS NULL) OR branch = ?)
+      LIMIT 1`
+    )
+    .get(
+      params.sourceType,
+      params.sourcePath,
+      params.sourcePath,
+      params.branch,
+      params.branch
+    ) as any;
+  return row ? mapDocumentRow(row) : null;
+}
+
+export function updateDocument(documentId: string, updates: UpdateDocumentInput): void {
+  const db = getDb();
+  const fields: string[] = [];
+  const values: unknown[] = [];
+  const mapping: Record<string, string> = {
+    title: "title",
+    sourceType: "source_type",
+    sourcePath: "source_path",
+    repo: "repo",
+    branch: "branch",
+    contentHash: "content_hash",
+    commitHash: "commit_hash",
+    version: "version",
+    status: "status",
+    chunkCount: "chunk_count",
+    errorMessage: "error_message",
+    ingestionJobId: "ingestion_job_id",
+    updatedAt: "updated_at",
+    lastIngestedAt: "last_ingested_at",
+    deletedAt: "deleted_at",
+  };
+
+  for (const [key, column] of Object.entries(mapping)) {
+    if (Object.prototype.hasOwnProperty.call(updates, key)) {
+      fields.push(`${column}=?`);
+      values.push((updates as any)[key]);
+    }
+  }
+
+  if (fields.length === 0) return;
+  if (!Object.prototype.hasOwnProperty.call(updates, "updatedAt")) {
+    fields.push("updated_at=?");
+    values.push(nowMs());
+  }
+
+  values.push(documentId);
+  db.prepare(`UPDATE documents SET ${fields.join(", ")} WHERE document_id=?`).run(...values);
+}
+
+export function setDocumentStatus(documentId: string, status: DocumentStatus, errorMessage?: string) {
+  updateDocument(documentId, {
+    status,
+    errorMessage: errorMessage ?? null,
+  });
 }
