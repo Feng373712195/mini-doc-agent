@@ -1,64 +1,87 @@
 import path from "node:path";
-import { DirectoryLoader } from "langchain/document_loaders/fs/directory";
-import { TextLoader } from "langchain/document_loaders/fs/text";
-import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
-import type { Document } from "langchain/document";
-import { createEmbeddings } from "./embeddings";
+import { Chroma } from "@langchain/community/vectorstores/chroma";
+import { Document } from "@langchain/core/documents";
+import { createEmbeddings } from "~~/server/services/embeddings";
+import type { IngestionChunk } from "~~/server/ingestion/chunks/chunkDocuments";
 
-const DOCS_DIR = path.resolve("docs");
-const VECTOR_DIR = path.resolve("vector-store");
+type SearchFilter = Partial<{
+  documentId: string;
+  sourceType: "github" | "pdf" | "word";
+  branch: string | null;
+  type: string;
+}>;
 
-// 单例模式：确保向量存储只初始化一次
-let vectorStorePromise: Promise<any> | null = null;
+export type VectorStoreService = {
+  upsertChunks: (chunks: IngestionChunk[], vectors: number[][]) => Promise<void>;
+  similaritySearch: (
+    query: string,
+    k?: number,
+    filter?: SearchFilter,
+  ) => Promise<Array<{ pageContent: string; metadata: any }>>;
+  deleteByDocumentId: (documentId: string) => Promise<void>;
+};
 
-/**
- * 动态导入 HNSWLib
- * 避免在不需要时加载 native 模块
- */
-async function getHNSWLib() {
-  const mod = await import("@langchain/community/vectorstores/hnswlib");
-  return mod.HNSWLib;
-}
+const CHROMA_COLLECTION = "doc_agent_knowledge";
+const CHROMA_PERSIST_DIR = path.resolve("chroma-data");
 
-/**
- * 加载并切分文档
- * 从 docs/ 目录读取所有 .md 文件，切分成小块用于向量化
- */
-async function loadAndSplitDocs(): Promise<Document[]> {
-  const loader = new DirectoryLoader(DOCS_DIR, {
-    ".md": (filePath) => new TextLoader(filePath),
-  });
-  const docs = await loader.load();
-  if (docs.length === 0) throw new Error(`No .md docs found in ${DOCS_DIR}`);
-  
-  // 切分文档：每块 500 字符，重叠 100 字符（保证上下文连贯性）
-  const splitter = new RecursiveCharacterTextSplitter({ chunkSize: 500, chunkOverlap: 100 });
-  return splitter.splitDocuments(docs);
-}
+let vectorStorePromise: Promise<Chroma> | null = null;
 
-/**
- * 加载或创建向量存储
- * 优先从磁盘加载已有索引，不存在则重新构建
- * @returns 向量存储实例
- */
-export async function loadOrCreateVectorStore() {
-  // 单例模式：避免重复初始化
+async function getChromaStore() {
   if (vectorStorePromise) return vectorStorePromise;
-  
-  vectorStorePromise = (async () => {
-    const HNSWLib = await getHNSWLib();
-    const embeddings = createEmbeddings();
-    try {
-      // 尝试从磁盘加载已有索引
-      return await HNSWLib.load(VECTOR_DIR, embeddings);
-    } catch {
-      // 索引不存在，重新构建并保存
-      const chunks = await loadAndSplitDocs();
-      const store = await HNSWLib.fromDocuments(chunks, embeddings);
-      await store.save(VECTOR_DIR);
-      return store;
-    }
-  })();
+
+  vectorStorePromise = Chroma.fromExistingCollection(createEmbeddings(), {
+    collectionName: CHROMA_COLLECTION,
+    url: process.env.CHROMA_URL || "http://localhost:8000",
+    collectionMetadata: { "hnsw:space": "cosine", persist_directory: CHROMA_PERSIST_DIR },
+  }).catch(async () => {
+    const store = new Chroma(createEmbeddings(), {
+      collectionName: CHROMA_COLLECTION,
+      url: process.env.CHROMA_URL || "http://localhost:8000",
+      collectionMetadata: { "hnsw:space": "cosine", persist_directory: CHROMA_PERSIST_DIR },
+    });
+    await store.ensureCollection();
+    return store;
+  });
+
   return vectorStorePromise;
 }
 
+function buildFilter(filter?: SearchFilter) {
+  if (!filter) return undefined;
+  const result: Record<string, unknown> = {};
+  if (filter.documentId) result.documentId = filter.documentId;
+  if (filter.sourceType) result.sourceType = filter.sourceType;
+  if (typeof filter.branch === "string") result.branch = filter.branch;
+  if (filter.type) result.type = filter.type;
+  return Object.keys(result).length ? result : undefined;
+}
+
+export async function getVectorStoreService(): Promise<VectorStoreService> {
+  const store = await getChromaStore();
+
+  return {
+    async upsertChunks(chunks, vectors) {
+      if (chunks.length === 0) return;
+      const docs = chunks.map(
+        (chunk) =>
+          new Document({
+            pageContent: chunk.content,
+            metadata: chunk.metadata,
+          }),
+      );
+      await store.addVectors(
+        vectors,
+        docs,
+        { ids: chunks.map((item) => item.chunkId) },
+      );
+    },
+
+    async similaritySearch(query, k = 3, filter) {
+      return store.similaritySearch(query, k, buildFilter(filter));
+    },
+
+    async deleteByDocumentId(documentId) {
+      await store.delete({ filter: { documentId } });
+    },
+  };
+}
