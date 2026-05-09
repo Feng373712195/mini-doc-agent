@@ -27,6 +27,7 @@ function assertUploadType(value: string | undefined): IngestionUploadType {
 }
 
 export default defineEventHandler(async (event): Promise<IngestionUploadResponse> => {
+  // 统一上传入口：通过 multipart + type 分发不同来源
   const parts = (await readMultipartFormData(event)) as FormPart[] | undefined;
   if (!parts || parts.length === 0) {
     throw createError({ statusCode: 400, statusMessage: "Missing multipart form data" });
@@ -36,6 +37,7 @@ export default defineEventHandler(async (event): Promise<IngestionUploadResponse
   const ingestionJobId = nanoid();
 
   if (type === "github") {
+    // GitHub 模式：仅接收仓库地址与可选分支
     const repoUrl = readTextPart(parts, "repoUrl");
     const branch = readTextPart(parts, "branch") || null;
     if (!repoUrl) {
@@ -62,6 +64,7 @@ export default defineEventHandler(async (event): Promise<IngestionUploadResponse
       ingestionJobId,
       documentId: document.documentId,
       task: async (emitStage) => {
+        // 真正的 ingestion 在后台执行，接口先快速返回
         await runUploadIngestion({
           type: "github",
           documentId: document.documentId,
@@ -108,6 +111,7 @@ export default defineEventHandler(async (event): Promise<IngestionUploadResponse
     ingestionJobId,
     documentId: document.documentId,
     task: async (emitStage) => {
+      // 文件来源统一走 pipeline，阶段由 onStage 回传
       await runUploadIngestion({
         type,
         documentId: document.documentId,

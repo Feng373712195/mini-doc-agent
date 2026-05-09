@@ -29,6 +29,7 @@ let vectorStorePromise: Promise<Chroma> | null = null;
 async function getChromaStore() {
   if (vectorStorePromise) return vectorStorePromise;
 
+  // 优先连接已有 collection，失败则按配置创建
   vectorStorePromise = Chroma.fromExistingCollection(createEmbeddings(), {
     collectionName: CHROMA_COLLECTION,
     url: process.env.CHROMA_URL || "http://localhost:8000",
@@ -62,6 +63,7 @@ export async function getVectorStoreService(): Promise<VectorStoreService> {
   return {
     async upsertChunks(chunks, vectors) {
       if (chunks.length === 0) return;
+      // 直接写入 pipeline 已计算好的向量，避免重复 embedding
       const docs = chunks.map(
         (chunk) =>
           new Document({

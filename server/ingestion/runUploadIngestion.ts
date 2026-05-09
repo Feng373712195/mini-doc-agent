@@ -18,6 +18,7 @@ export async function saveUploadFile(input: {
   filename: string;
   data: Buffer;
 }) {
+  // 文件统一落到 data/uploads，便于后续排障与清理
   const dir = getUploadsDir();
   await fs.mkdir(dir, { recursive: true });
   const safeName = input.filename.replace(/[^a-zA-Z0-9_.-]/g, "_");
@@ -44,6 +45,7 @@ export async function runUploadIngestion(params: {
 
   const pipeline = new KnowledgeIngestionPipeline();
   const vectorStore = await getVectorStoreService();
+  // 覆盖重建策略：同 documentId 先删旧向量再重建
   await vectorStore.deleteByDocumentId(params.documentId);
 
   if (params.type === "github") {

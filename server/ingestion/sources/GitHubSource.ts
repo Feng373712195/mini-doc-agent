@@ -71,6 +71,7 @@ export class GitHubSource implements IDataSource {
   async load(): Promise<RawDocument[]> {
     const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "doc-agent-gh-"));
     try {
+      // 通过浅克隆 + sparse-checkout 控制下载体积
       const cloneArgs = ["clone", "--depth", "1", "--filter=blob:none", "--sparse"];
       if (this.branch) {
         cloneArgs.push("--branch", this.branch);
