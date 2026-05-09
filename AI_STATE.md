@@ -29,6 +29,13 @@
 
 ## 本轮已完成任务
 
+- 前端接入：文档上传与进度展示（2026-05-10）
+  - UploadView.vue 已接入 /api/ingestion/upload，支持 github/pdf/word 三类上传
+  - 已接入 /api/ingestion/jobs/:jobId/events SSE，展示阶段进度与成功/失败提示
+  - 
+pm run typecheck 与 
+pm run test:unit 通过
+
 - 修复：Typecheck CSS 声明缺失（2026-05-10）
   - 新增 pp/types/style.d.ts，声明 declare module '*.css'，解决 nt-design-vue/dist/reset.css 的 TS2882 报错
   - 
@@ -73,6 +80,7 @@ pm run typecheck 仍有既有问题：pp/plugins/antd.ts 对 nt-design-vue/dis
 1. 补齐上传进度与文档状态的前端接入
 2. 增强错误处理与重试策略（上传、解析、入库）
 3. 增加 ingestion 链路单元测试与集成测试
+
 
 
 
