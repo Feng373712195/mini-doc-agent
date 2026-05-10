@@ -1,41 +1,7 @@
-﻿import { createError, defineEventHandler, getRouterParam } from "h3";
-import { getDocumentById, updateDocument } from "~~/server/core/database";
+import { createError, defineEventHandler, getRouterParam } from "h3";
+import { getDocumentById } from "~~/server/core/database";
+import { runIngestionJob } from "~~/server/services/ingestionJobs";
 import { runUploadIngestion } from "~~/server/ingestion/runUploadIngestion";
-
-async function runGithubRefresh(input: {
-  documentId: string;
-  repoUrl: string;
-  branch: string | null;
-  previousStatus: "active" | "inactive" | "failed";
-}) {
-  try {
-    await runUploadIngestion({
-      type: "github",
-      documentId: input.documentId,
-      repoUrl: input.repoUrl,
-      branch: input.branch,
-      onStage: (stage) => {
-        updateDocument(input.documentId, {
-          currentStage: stage,
-        });
-      },
-    });
-    updateDocument(input.documentId, {
-      status: "active",
-      currentStage: "completed",
-      errorMessage: null,
-      updatedAt: Date.now(),
-    });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "refresh failed";
-    updateDocument(input.documentId, {
-      status: input.previousStatus,
-      currentStage: "failed",
-      errorMessage: message,
-      updatedAt: Date.now(),
-    });
-  }
-}
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, "id");
@@ -52,24 +18,25 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 409, statusMessage: "Document status does not allow refresh" });
   }
 
-  const previousStatus = document.status as "active" | "inactive" | "failed";
+  const ingestionJobId = `refresh-${id}-${Date.now()}`;
 
   if (document.sourceType === "github") {
     if (!document.sourcePath) {
       throw createError({ statusCode: 400, statusMessage: "Missing repoUrl in sourcePath" });
     }
 
-    updateDocument(id, {
-      status: "processing",
-      currentStage: "queued",
-      errorMessage: null,
-    });
-
-    void runGithubRefresh({
+    void runIngestionJob({
+      ingestionJobId,
       documentId: id,
-      repoUrl: document.sourcePath,
-      branch: document.branch,
-      previousStatus,
+      task: async (emitStage) => {
+        await runUploadIngestion({
+          type: "github",
+          documentId: id,
+          repoUrl: document.sourcePath,
+          branch: document.branch,
+          onStage: (stage, progress) => emitStage(stage, progress, stage),
+        });
+      },
     });
 
     return {
@@ -83,7 +50,6 @@ export default defineEventHandler(async (event) => {
     };
   }
 
-  // PDF/Word 走重新上传路径：前端复用上传弹窗并预选类型。
   return {
     code: 0,
     message: "need_reupload",
