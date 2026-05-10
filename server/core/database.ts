@@ -437,6 +437,11 @@ export function setDocumentStatus(documentId: string, status: DocumentStatus, er
   });
 }
 
+export function deleteDocumentById(documentId: string): void {
+  const db = getDb();
+  db.prepare("DELETE FROM documents WHERE document_id=?").run(documentId);
+}
+
 export function listDocuments(params: {
   page: number;
   pageSize: number;
