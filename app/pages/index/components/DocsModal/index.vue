@@ -8,22 +8,20 @@
     @cancel="onCancel"
   >
     <div class="docs-modal">
-      <!-- 内容区 -->
       <div class="modal-content">
-        <ListView v-if="currentView === 'list'" ref="listViewRef" />
+        <ListView v-if="currentView === 'list'" ref="listViewRef" @need-reupload="handleNeedReupload" />
         <UploadTypesView
           v-else-if="currentView === 'upload-types'"
           @select="onSelectType"
         />
-        <UploadView v-else-if="currentView === 'upload'" :type="uploadType" @completed="onUploadCompleted" />
+        <UploadView v-else-if="currentView === 'upload'" :type="uploadType" :update-mode="updateMode" @completed="onUploadCompleted" />
       </div>
 
-      <!-- 顶部操作区 -->
       <div class="modal-footer">
         <a-button v-if="currentView !== 'list'" @click="goBack">返回</a-button>
-        <a-button v-else type="primary" @click="goToUploadTypes"
-          >上传文档</a-button
-        >
+        <a-button v-else type="primary" @click="goToUploadTypes">
+          上传文档
+        </a-button>
       </div>
     </div>
   </a-modal>
@@ -53,6 +51,7 @@ const currentView = ref<ViewType>("list");
 const uploadType = ref<"github" | "pdf" | "word" | null>(null);
 const viewHistory = ref<ViewType[]>(["list"]);
 const listViewRef = ref<InstanceType<typeof ListView> | null>(null);
+const updateMode = ref<{ documentId: string; title: string } | null>(null);
 
 function goToUploadTypes() {
   currentView.value = "upload-types";
@@ -68,11 +67,10 @@ function onSelectType(type: "github" | "pdf" | "word") {
 function goBack() {
   if (viewHistory.value.length > 1) {
     viewHistory.value.pop();
-    currentView.value = viewHistory.value[
-      viewHistory.value.length - 1
-    ] as ViewType;
+    currentView.value = viewHistory.value[viewHistory.value.length - 1] as ViewType;
     if (currentView.value === "list") {
       uploadType.value = null;
+      updateMode.value = null;
     }
   }
 }
@@ -80,6 +78,7 @@ function goBack() {
 function onUploadCompleted() {
   currentView.value = "list";
   uploadType.value = null;
+  updateMode.value = null;
   viewHistory.value = ["list"];
   listViewRef.value?.refresh();
 }
@@ -88,7 +87,15 @@ function onCancel() {
   emit("update:open", false);
   currentView.value = "list";
   uploadType.value = null;
+  updateMode.value = null;
   viewHistory.value = ["list"];
+}
+
+function handleNeedReupload(documentId: string, sourceType: "github" | "pdf" | "word", title: string) {
+  uploadType.value = sourceType;
+  updateMode.value = { documentId, title };
+  currentView.value = "upload";
+  viewHistory.value = ["list", "upload"];
 }
 </script>
 

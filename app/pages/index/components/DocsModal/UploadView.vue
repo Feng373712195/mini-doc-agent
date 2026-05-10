@@ -5,6 +5,10 @@
       <div class="progress-text">{{ progressText }}</div>
     </div>
 
+    <div v-if="updateMode" class="update-hint">
+      <a-alert type="info" :message="`正在更新文档：${updateMode.title}`" />
+    </div>
+
     <!-- Github 上传 -->
     <div v-if="type === 'github'" class="github-upload">
       <a-form layout="vertical">
@@ -30,8 +34,7 @@
               type="primary"
               @click="onGithubUpload"
               :loading="uploading"
-              >上传</a-button
-            >
+            >{{ updateMode ? '更新' : '上传' }}</a-button>
           </div>
         </a-form-item>
       </a-form>
@@ -59,8 +62,7 @@
           type="primary"
           @click="onFileUpload('pdf')"
           :loading="uploading"
-          >上传</a-button
-        >
+        >{{ updateMode ? '更新' : '上传' }}</a-button>
       </div>
     </div>
 
@@ -86,8 +88,7 @@
           type="primary"
           @click="onFileUpload('word')"
           :loading="uploading"
-          >上传</a-button
-        >
+        >{{ updateMode ? '更新' : '上传' }}</a-button>
       </div>
     </div>
   </div>
@@ -105,6 +106,7 @@ const emit = defineEmits<{
 
 const props = defineProps<{
   type: "github" | "pdf" | "word" | null;
+  updateMode?: { documentId: string; title: string } | null;
 }>();
 
 const githubUrl = ref("");
@@ -138,7 +140,7 @@ function onUploadComplete(success: boolean) {
   uploading.value = false;
   closeProgressStream();
   if (success) {
-    message.success("上传并入库成功");
+    message.success(props.updateMode ? "更新并入库成功" : "上传并入库成功");
   }
   emit("completed");
 }
@@ -172,12 +174,15 @@ async function submit(formData: FormData) {
   progressText.value = "queued";
 
   try {
+    const url = props.updateMode 
+      ? `/api/documents/${props.updateMode.documentId}/update` 
+      : "/api/ingestion/upload";
     const resp = await $fetch<{
       code: number;
       message: string;
       data: { ingestionJobId: string };
       timestamp: number;
-    }>("/api/ingestion/upload", {
+    }>(url, {
       method: "POST",
       body: formData,
     });
@@ -282,6 +287,12 @@ onBeforeUnmount(() => {
       font-size: 12px;
       color: #666;
     }
+  }
+
+  .update-hint {
+    width: 100%;
+    max-width: 420px;
+    margin-bottom: 16px;
   }
 
   .github-upload,

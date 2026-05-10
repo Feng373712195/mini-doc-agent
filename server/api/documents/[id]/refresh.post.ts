@@ -6,7 +6,10 @@ import { runUploadIngestion } from "~~/server/ingestion/runUploadIngestion";
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, "id");
   if (!id) {
-    throw createError({ statusCode: 400, statusMessage: "Missing document id" });
+    throw createError({
+      statusCode: 400,
+      statusMessage: "Missing document id",
+    });
   }
 
   const document = getDocumentById(id);
@@ -15,14 +18,20 @@ export default defineEventHandler(async (event) => {
   }
 
   if (!["active", "inactive", "failed"].includes(document.status)) {
-    throw createError({ statusCode: 409, statusMessage: "Document status does not allow refresh" });
+    throw createError({
+      statusCode: 409,
+      statusMessage: "Document status does not allow refresh",
+    });
   }
 
   const ingestionJobId = `refresh-${id}-${Date.now()}`;
 
   if (document.sourceType === "github") {
     if (!document.sourcePath) {
-      throw createError({ statusCode: 400, statusMessage: "Missing repoUrl in sourcePath" });
+      throw createError({
+        statusCode: 400,
+        statusMessage: "Missing repoUrl in sourcePath",
+      });
     }
 
     void runIngestionJob({
@@ -32,7 +41,7 @@ export default defineEventHandler(async (event) => {
         await runUploadIngestion({
           type: "github",
           documentId: id,
-          repoUrl: document.sourcePath,
+          repoUrl: document.sourcePath as string,
           branch: document.branch,
           onStage: (stage, progress) => emitStage(stage, progress, stage),
         });

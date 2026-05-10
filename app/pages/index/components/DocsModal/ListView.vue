@@ -120,6 +120,10 @@ import { $fetch } from "ohmyfetch";
 import { message } from "ant-design-vue";
 import { DownOutlined } from "@ant-design/icons-vue";
 
+const emit = defineEmits<{
+  "need-reupload": [documentId: string, sourceType: "github" | "pdf" | "word", title: string];
+}>();
+
 interface DocumentRecord {
   documentId: string;
   title: string;
@@ -156,6 +160,18 @@ interface StatusToggleResponse {
   data: {
     documentId: string;
     status: string;
+  };
+  timestamp: number;
+}
+
+interface RefreshResponse {
+  code: number;
+  message: string;
+  data: {
+    mode: "background_refresh" | "need_reupload";
+    documentId?: string;
+    sourceType?: "github" | "pdf" | "word";
+    title?: string;
   };
   timestamp: number;
 }
@@ -373,17 +389,21 @@ async function handleRefreshConfirm() {
   if (!refreshTarget.value) return;
   actionLoading.value = true;
   try {
-    const response = await $fetch<{ code: number; message: string }>(
+    const response = await $fetch<RefreshResponse>(
       `/api/documents/${refreshTarget.value.documentId}/refresh`,
       {
         method: "POST",
       },
     );
     if (response.code === 0) {
-      message.success("更新成功");
       refreshModalVisible.value = false;
       refreshTarget.value = null;
-      fetchDocuments();
+      if (response.data.mode === "background_refresh") {
+        message.success("已开始更新，请稍候");
+        fetchDocuments();
+      } else if (response.data.mode === "need_reupload" && response.data.sourceType && response.data.title) {
+        emit("need-reupload", response.data.documentId!, response.data.sourceType, response.data.title);
+      }
     } else {
       message.error(response.message || "更新失败");
     }
