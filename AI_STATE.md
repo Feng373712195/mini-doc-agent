@@ -29,6 +29,13 @@
 
 ## 本轮已完成任务
 
+- 任务1：数据层改造（2026-05-10）
+  - documents 增加 current_stage 字段（兼容旧库自动补列）
+  - shared/document.ts 新增 DocumentStage 类型
+  - 文档读写映射已接入 currentStage 字段
+  - 
+pm run typecheck 通过
+
 - 前端接入：文档上传与进度展示（2026-05-10）
   - UploadView.vue 已接入 /api/ingestion/upload，支持 github/pdf/word 三类上传
   - 已接入 /api/ingestion/jobs/:jobId/events SSE，展示阶段进度与成功/失败提示
@@ -80,6 +87,7 @@ pm run typecheck 仍有既有问题：pp/plugins/antd.ts 对 nt-design-vue/dis
 1. 补齐上传进度与文档状态的前端接入
 2. 增强错误处理与重试策略（上传、解析、入库）
 3. 增加 ingestion 链路单元测试与集成测试
+
 
 
 

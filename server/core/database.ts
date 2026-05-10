@@ -71,6 +71,7 @@ export function getDb() {
       commit_hash TEXT,
       version TEXT,
       status TEXT NOT NULL,
+      current_stage TEXT,
       chunk_count INTEGER NOT NULL DEFAULT 0,
       error_message TEXT,
       ingestion_job_id TEXT,
@@ -87,6 +88,12 @@ export function getDb() {
       ON documents(updated_at DESC);
   `);
   dbSingleton = db;
+  // 兼容已存在数据库：增量补齐 current_stage 字段。
+  try {
+    db.exec("ALTER TABLE documents ADD COLUMN current_stage TEXT;");
+  } catch {
+    // 列已存在时忽略。
+  }
   return dbSingleton;
 }
 
@@ -271,6 +278,7 @@ function mapDocumentRow(row: any): DocumentRecord {
     commitHash: row.commitHash,
     version: row.version,
     status: row.status,
+    currentStage: row.currentStage,
     chunkCount: row.chunkCount,
     errorMessage: row.errorMessage,
     ingestionJobId: row.ingestionJobId,
@@ -288,9 +296,9 @@ export function createDocument(input: CreateDocumentInput): DocumentRecord {
   db.prepare(
     `INSERT INTO documents(
       document_id, title, source_type, source_path, repo, branch, content_hash, commit_hash,
-      version, status, chunk_count, error_message, ingestion_job_id, created_at, updated_at,
+      version, status, current_stage, chunk_count, error_message, ingestion_job_id, created_at, updated_at,
       last_ingested_at, deleted_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, NULL, ?, ?, ?, NULL, NULL)`
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, NULL, ?, ?, ?, NULL, NULL)`
   ).run(
     documentId,
     input.title,
@@ -302,6 +310,7 @@ export function createDocument(input: CreateDocumentInput): DocumentRecord {
     input.commitHash ?? null,
     input.version ?? null,
     input.status,
+    null,
     input.ingestionJobId ?? null,
     ts,
     ts
@@ -324,6 +333,7 @@ export function getDocumentById(documentId: string): DocumentRecord | null {
         commit_hash as commitHash,
         version,
         status,
+        current_stage as currentStage,
         chunk_count as chunkCount,
         error_message as errorMessage,
         ingestion_job_id as ingestionJobId,
@@ -356,6 +366,7 @@ export function getDocumentBySource(params: {
         commit_hash as commitHash,
         version,
         status,
+        current_stage as currentStage,
         chunk_count as chunkCount,
         error_message as errorMessage,
         ingestion_job_id as ingestionJobId,
@@ -393,6 +404,7 @@ export function updateDocument(documentId: string, updates: UpdateDocumentInput)
     commitHash: "commit_hash",
     version: "version",
     status: "status",
+    currentStage: "current_stage",
     chunkCount: "chunk_count",
     errorMessage: "error_message",
     ingestionJobId: "ingestion_job_id",

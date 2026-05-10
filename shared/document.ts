@@ -8,6 +8,15 @@ export type DocumentStatus =
   | "deleting"
   | "inactive";
 
+export type DocumentStage =
+  | "queued"
+  | "parsing"
+  | "chunking"
+  | "embedding"
+  | "indexing"
+  | "completed"
+  | "failed";
+
 export type DocumentRecord = {
   documentId: string;
   title: string;
@@ -19,6 +28,7 @@ export type DocumentRecord = {
   commitHash: string | null;
   version: string | null;
   status: DocumentStatus;
+  currentStage: DocumentStage | null;
   chunkCount: number;
   errorMessage: string | null;
   ingestionJobId: string | null;
