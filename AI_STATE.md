@@ -29,6 +29,12 @@
 
 ## 本轮已完成任务
 
+- 任务3：文档停用/启用接口（2026-05-10）
+  - 新增 PATCH /api/documents/:id/status（仅允许 active/inactive）
+  - uploading/processing/deleting 状态下禁止切换
+  - 
+pm run typecheck 通过
+
 - 任务2：文档查询接口（2026-05-10）
   - 新增 GET /api/documents（分页、状态筛选、createdAt 倒序）
   - 新增 GET /api/documents/:id（详情）
@@ -94,6 +100,7 @@ pm run typecheck 仍有既有问题：pp/plugins/antd.ts 对 nt-design-vue/dis
 1. 补齐上传进度与文档状态的前端接入
 2. 增强错误处理与重试策略（上传、解析、入库）
 3. 增加 ingestion 链路单元测试与集成测试
+
 
 
 
