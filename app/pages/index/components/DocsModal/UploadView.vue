@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="upload-view">
     <div class="progress-wrap" v-if="uploading">
       <a-progress :percent="progress" :status="progressStatus" />
@@ -26,7 +26,12 @@
         </a-form-item>
         <a-form-item>
           <div class="btn-wrap">
-            <a-button type="primary" @click="onGithubUpload" :loading="uploading">上传</a-button>
+            <a-button
+              type="primary"
+              @click="onGithubUpload"
+              :loading="uploading"
+              >上传</a-button
+            >
           </div>
         </a-form-item>
       </a-form>
@@ -50,7 +55,12 @@
       </a-upload>
       <div v-if="pdfError" class="error-text">{{ pdfError }}</div>
       <div class="btn-wrap">
-        <a-button type="primary" @click="onFileUpload('pdf')" :loading="uploading">上传</a-button>
+        <a-button
+          type="primary"
+          @click="onFileUpload('pdf')"
+          :loading="uploading"
+          >上传</a-button
+        >
       </div>
     </div>
 
@@ -72,7 +82,12 @@
       </a-upload>
       <div v-if="wordError" class="error-text">{{ wordError }}</div>
       <div class="btn-wrap">
-        <a-button type="primary" @click="onFileUpload('word')" :loading="uploading">上传</a-button>
+        <a-button
+          type="primary"
+          @click="onFileUpload('word')"
+          :loading="uploading"
+          >上传</a-button
+        >
       </div>
     </div>
   </div>
@@ -83,6 +98,10 @@ import { computed, onBeforeUnmount, ref } from "vue";
 import { message } from "ant-design-vue";
 import { UploadOutlined } from "@ant-design/icons-vue";
 import type { UploadProps, UploadFile } from "ant-design-vue";
+
+const emit = defineEmits<{
+  completed: [];
+}>();
 
 const props = defineProps<{
   type: "github" | "pdf" | "word" | null;
@@ -101,7 +120,9 @@ const progress = ref(0);
 const progressText = ref("");
 let eventSource: EventSource | null = null;
 
-const progressStatus = computed(() => (progress.value >= 100 ? "success" : "active"));
+const progressStatus = computed(() =>
+  progress.value >= 100 ? "success" : "active",
+);
 
 function validateUrl(url: string): boolean {
   const regex = /^https?:\/\/.+/;
@@ -113,9 +134,20 @@ function closeProgressStream() {
   eventSource = null;
 }
 
+function onUploadComplete(success: boolean) {
+  uploading.value = false;
+  closeProgressStream();
+  if (success) {
+    message.success("上传并入库成功");
+  }
+  emit("completed");
+}
+
 function subscribeProgress(jobId: string) {
   closeProgressStream();
-  eventSource = new EventSource(`/api/ingestion/jobs/${encodeURIComponent(jobId)}/events`);
+  eventSource = new EventSource(
+    `/api/ingestion/jobs/${encodeURIComponent(jobId)}/events`,
+  );
   eventSource.addEventListener("progress", (evt: MessageEvent) => {
     const payload = JSON.parse(evt.data) as {
       stage: string;
@@ -125,14 +157,11 @@ function subscribeProgress(jobId: string) {
     progress.value = payload.progress || 0;
     progressText.value = payload.message || payload.stage;
     if (payload.stage === "completed") {
-      uploading.value = false;
-      message.success("上传并入库成功");
-      closeProgressStream();
+      onUploadComplete(true);
     }
     if (payload.stage === "failed") {
-      uploading.value = false;
       message.error(payload.message || "上传失败");
-      closeProgressStream();
+      onUploadComplete(false);
     }
   });
 }
@@ -156,6 +185,7 @@ async function submit(formData: FormData) {
   } catch (err) {
     uploading.value = false;
     message.error(err instanceof Error ? err.message : "上传失败");
+    emit("completed");
   }
 }
 
@@ -179,7 +209,8 @@ function onGithubUpload() {
 
 const beforePdfUpload: UploadProps["beforeUpload"] = (file) => {
   pdfError.value = "";
-  const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
+  const isPdf =
+    file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
   if (!isPdf) {
     pdfError.value = "只能上传 PDF 文件";
     return false;
@@ -195,7 +226,8 @@ const beforeWordUpload: UploadProps["beforeUpload"] = (file) => {
   wordError.value = "";
   const isWord =
     file.type === "application/msword" ||
-    file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+    file.type ===
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
     file.name.toLowerCase().endsWith(".doc") ||
     file.name.toLowerCase().endsWith(".docx");
   if (!isWord) {
@@ -210,7 +242,8 @@ const handleWordChange: UploadProps["onChange"] = (info) => {
 };
 
 function onFileUpload(uploadType: "pdf" | "word") {
-  const selected = uploadType === "pdf" ? pdfFileList.value[0] : wordFileList.value[0];
+  const selected =
+    uploadType === "pdf" ? pdfFileList.value[0] : wordFileList.value[0];
   if (!selected?.originFileObj) {
     message.warning("请先选择文件");
     return;

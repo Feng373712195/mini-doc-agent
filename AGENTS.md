@@ -22,6 +22,7 @@ AI执行任务时必须遵守以下规则：
 - 必须遵守 输出规范（/rules/output.md）
 - 必须遵守 架构规范（/rules/architecture.md）
 - 必须遵守 复用规范（/rules/reuse.md）
+- 必须遵循 后端代码设计规范 (/rules/backend.md)
 - 必须遵循 样式规范（/DESIGN.md）
 
 ---

@@ -10,5 +10,6 @@ playwright-report/
 test-results/
 
 prompts-template.md
+AI_STATE.md
 .DS_Store
 

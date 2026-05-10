@@ -4,14 +4,25 @@ import os from "node:os";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { nanoid } from "nanoid";
-import type { IDataSource, RawDocument } from "~~/server/ingestion/sources/IDataSource";
+import type {
+  IDataSource,
+  RawDocument,
+} from "~~/server/ingestion/sources/IDataSource";
 
 const execFileAsync = promisify(execFile);
 
 const ALLOWED_DIR_PREFIX = ["src/", "core/", "service/", "lib/"];
 const EXCLUDED_DIRS = ["node_modules", "dist", "build", "logs", ".git"];
 const ALLOWED_FILES = new Set(["package.json"]);
-const ALLOWED_EXT = new Set([".md", ".ts", ".js", ".config", ".yaml", ".yml", ".json"]);
+const ALLOWED_EXT = new Set([
+  ".md",
+  ".ts",
+  ".js",
+  ".config",
+  ".yaml",
+  ".yml",
+  ".json",
+]);
 
 function toPosix(input: string) {
   return input.split(path.sep).join("/");
@@ -69,22 +80,42 @@ export class GitHubSource implements IDataSource {
   ) {}
 
   async load(): Promise<RawDocument[]> {
-    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "doc-agent-gh-"));
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "repo-mind-gh-"));
     try {
       // 通过浅克隆 + sparse-checkout 控制下载体积
-      const cloneArgs = ["clone", "--depth", "1", "--filter=blob:none", "--sparse"];
+      const cloneArgs = [
+        "clone",
+        "--depth",
+        "1",
+        "--filter=blob:none",
+        "--sparse",
+      ];
       if (this.branch) {
         cloneArgs.push("--branch", this.branch);
       }
       cloneArgs.push(this.repoUrl, tempDir);
       await execFileAsync("git", cloneArgs);
-      await execFileAsync("git", ["-C", tempDir, "sparse-checkout", "set", ...ALLOWED_DIR_PREFIX]);
+      await execFileAsync("git", [
+        "-C",
+        tempDir,
+        "sparse-checkout",
+        "set",
+        ...ALLOWED_DIR_PREFIX,
+      ]);
 
       const activeBranch = (
-        await execFileAsync("git", ["-C", tempDir, "rev-parse", "--abbrev-ref", "HEAD"])
+        await execFileAsync("git", [
+          "-C",
+          tempDir,
+          "rev-parse",
+          "--abbrev-ref",
+          "HEAD",
+        ])
       ).stdout.trim();
       this.resolvedBranch = activeBranch || this.branch;
-      this.commitHash = (await execFileAsync("git", ["-C", tempDir, "rev-parse", "HEAD"])).stdout.trim();
+      this.commitHash = (
+        await execFileAsync("git", ["-C", tempDir, "rev-parse", "HEAD"])
+      ).stdout.trim();
 
       const files = await collectFiles(tempDir);
       const docs: RawDocument[] = [];

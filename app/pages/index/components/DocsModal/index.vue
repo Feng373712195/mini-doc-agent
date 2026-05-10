@@ -10,12 +10,12 @@
     <div class="docs-modal">
       <!-- 内容区 -->
       <div class="modal-content">
-        <ListView v-if="currentView === 'list'" />
+        <ListView v-if="currentView === 'list'" ref="listViewRef" />
         <UploadTypesView
           v-else-if="currentView === 'upload-types'"
           @select="onSelectType"
         />
-        <UploadView v-else-if="currentView === 'upload'" :type="uploadType" />
+        <UploadView v-else-if="currentView === 'upload'" :type="uploadType" @completed="onUploadCompleted" />
       </div>
 
       <!-- 顶部操作区 -->
@@ -52,6 +52,7 @@ type ViewType = "list" | "upload-types" | "upload";
 const currentView = ref<ViewType>("list");
 const uploadType = ref<"github" | "pdf" | "word" | null>(null);
 const viewHistory = ref<ViewType[]>(["list"]);
+const listViewRef = ref<InstanceType<typeof ListView> | null>(null);
 
 function goToUploadTypes() {
   currentView.value = "upload-types";
@@ -76,9 +77,15 @@ function goBack() {
   }
 }
 
+function onUploadCompleted() {
+  currentView.value = "list";
+  uploadType.value = null;
+  viewHistory.value = ["list"];
+  listViewRef.value?.refresh();
+}
+
 function onCancel() {
   emit("update:open", false);
-  // 重置状态
   currentView.value = "list";
   uploadType.value = null;
   viewHistory.value = ["list"];

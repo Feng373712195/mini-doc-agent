@@ -1,4 +1,4 @@
-﻿# Doc Agent (Nuxt Fullstack)
+﻿# RepoMind (Nuxt Fullstack)
 
 一个基于 Nuxt 的文档问答系统，采用“接口上传 -> Ingestion Pipeline -> 向量检索 -> 对话回答”的流程。
 
