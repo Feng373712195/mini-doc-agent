@@ -436,3 +436,60 @@ export function setDocumentStatus(documentId: string, status: DocumentStatus, er
     errorMessage: errorMessage ?? null,
   });
 }
+
+export function listDocuments(params: {
+  page: number;
+  pageSize: number;
+  status?: DocumentStatus | "all";
+}): { items: DocumentRecord[]; total: number } {
+  const db = getDb();
+  const page = Math.max(1, params.page || 1);
+  const pageSize = Math.max(1, params.pageSize || 3);
+  const offset = (page - 1) * pageSize;
+
+  // 业务约定：列表默认隐藏 deleting。
+  const whereParts = ["status != 'deleting'"];
+  const values: unknown[] = [];
+  if (params.status && params.status !== "all") {
+    whereParts.push("status = ?");
+    values.push(params.status);
+  }
+  const whereSql = `WHERE ${whereParts.join(" AND ")}`;
+
+  const rows = db
+    .prepare(
+      `SELECT
+        document_id as documentId,
+        title,
+        source_type as sourceType,
+        source_path as sourcePath,
+        repo,
+        branch,
+        content_hash as contentHash,
+        commit_hash as commitHash,
+        version,
+        status,
+        current_stage as currentStage,
+        chunk_count as chunkCount,
+        error_message as errorMessage,
+        ingestion_job_id as ingestionJobId,
+        created_at as createdAt,
+        updated_at as updatedAt,
+        last_ingested_at as lastIngestedAt,
+        deleted_at as deletedAt
+      FROM documents
+      ${whereSql}
+      ORDER BY created_at DESC
+      LIMIT ? OFFSET ?`
+    )
+    .all(...values, pageSize, offset) as any[];
+
+  const total = db
+    .prepare(`SELECT COUNT(1) as total FROM documents ${whereSql}`)
+    .get(...values) as { total: number };
+
+  return {
+    items: rows.map((row) => mapDocumentRow(row)),
+    total: total.total,
+  };
+}

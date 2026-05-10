@@ -29,6 +29,13 @@
 
 ## 本轮已完成任务
 
+- 任务2：文档查询接口（2026-05-10）
+  - 新增 GET /api/documents（分页、状态筛选、createdAt 倒序）
+  - 新增 GET /api/documents/:id（详情）
+  - 列表查询默认隐藏 deleting 状态（含 all 筛选）
+  - 
+pm run typecheck 通过
+
 - 任务1：数据层改造（2026-05-10）
   - documents 增加 current_stage 字段（兼容旧库自动补列）
   - shared/document.ts 新增 DocumentStage 类型
@@ -87,6 +94,7 @@ pm run typecheck 仍有既有问题：pp/plugins/antd.ts 对 nt-design-vue/dis
 1. 补齐上传进度与文档状态的前端接入
 2. 增强错误处理与重试策略（上传、解析、入库）
 3. 增加 ingestion 链路单元测试与集成测试
+
 
 
 
