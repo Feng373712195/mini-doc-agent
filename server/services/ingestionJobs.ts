@@ -1,9 +1,9 @@
-import { setDocumentStatus, updateDocument } from "~~/server/core/database";
+﻿import { setDocumentStatus, updateDocument } from "~~/server/core/database";
 import type { IngestionJobEvent, IngestionJobStage } from "~~/shared/ingestion";
 
 type Listener = (event: IngestionJobEvent) => void;
 
-// 内存中的任务订阅中心：用于 SSE 实时推送上传进度
+// 内存中的任务订阅中心：用于 SSE 实时推送上传进度。
 const listeners = new Map<string, Set<Listener>>();
 const latestEvents = new Map<string, IngestionJobEvent>();
 
@@ -42,8 +42,13 @@ export async function runIngestionJob(params: {
 }) {
   const { ingestionJobId, documentId, task } = params;
 
-  // 统一阶段回调，业务侧只需关注 stage/progress
+  // 统一阶段回调：推送事件 + 落库 currentStage，避免前端强依赖 SSE。
   const emitStage = (stage: IngestionJobStage, progress: number, message?: string) => {
+    updateDocument(documentId, {
+      currentStage: stage,
+      ...(stage === "queued" ? { status: "processing", errorMessage: null } : {}),
+    });
+
     publishJobEvent({
       ingestionJobId,
       documentId,
@@ -55,19 +60,26 @@ export async function runIngestionJob(params: {
   };
 
   try {
-    // 文档主状态保持粗粒度，前端细粒度依赖 SSE 事件
+    // 文档主状态保持粗粒度：处理中 -> 成功/失败。
     setDocumentStatus(documentId, "processing");
     emitStage("queued", 0, "queued");
+
     await task(emitStage);
+
     emitStage("completed", 100, "completed");
     updateDocument(documentId, {
       status: "active",
+      currentStage: "completed",
       lastIngestedAt: Date.now(),
       errorMessage: null,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "ingestion failed";
     emitStage("failed", 100, message);
-    setDocumentStatus(documentId, "failed", message);
+    updateDocument(documentId, {
+      status: "failed",
+      currentStage: "failed",
+      errorMessage: message,
+    });
   }
 }

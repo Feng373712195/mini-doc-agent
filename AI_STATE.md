@@ -29,6 +29,13 @@
 
 ## 本轮已完成任务
 
+- 任务6：阶段状态联动收口（2026-05-10）
+  - unIngestionJob 已实现 stage 落库：queued/parsing/chunking/embedding/indexing/completed/failed
+  - 成功写入 status=active,currentStage=completed,lastIngestedAt；失败写入 status=failed,currentStage=failed,errorMessage`r
+  - GitHub refresh 链路已补齐阶段落库
+  - 
+pm run typecheck 通过
+
 - 任务5：文档更新接口（2026-05-10）
   - 新增 POST /api/documents/:id/refresh`r
   - GitHub 类型支持后台覆盖重建（processing + queued -> completed/failed）
@@ -111,17 +118,164 @@ pm run typecheck 仍有既有问题：pp/plugins/antd.ts 对 nt-design-vue/dis
 - Chroma 连接依赖服务可用性（默认 `http://localhost:8000`），需在下一轮补齐本地持久化运行说明与启动方案。
 - 前端文档管理弹窗尚未接入上传接口与 SSE 进度展示。
 
-## 下一步计划
+## 下一步任务
 
-1. 补齐上传进度与文档状态的前端接入
-2. 增强错误处理与重试策略（上传、解析、入库）
-3. 增加 ingestion 链路单元测试与集成测试
+> 目标：以下任务应当做到“交给其他 AI 也能直接按步骤落地”。
+> 执行节奏：**每完成 1 条任务就暂停**，更新 AI_STATE + 提交代码，然后等待用户确认。
+> 统一约束：
+> - 严格遵守 `AGENTS.md` 与 `rules/*`。
+> - 所有接口统一返回：`{ code, message, data, timestamp }`。
+> - 前端列表默认隐藏 `deleting`（即使 status=all）。
+> - 失败错误 `errorMessage` 仅在 `status=failed` 的详情中展示。
+> - 当前阶段枚举：`queued|parsing|chunking|embedding|indexing|completed|failed`。
 
+1. 任务6：阶段状态联动收口（后端）
+   - 目的：让 `documents.status` 与 `documents.currentStage` 全程可追踪，替代前端 SSE 依赖。
+   - 需要改的文件：
+     - `server/services/ingestionJobs.ts`
+     - `server/ingestion/runUploadIngestion.ts`
+     - `server/core/database.ts`（若缺 helper）
+   - 实现要求：
+     - 上传/更新（github）进入处理时：
+       - `status=processing`
+       - `currentStage=queued`
+       - `errorMessage=null`
+     - 流程推进时依次写入：`parsing -> chunking -> embedding -> indexing`。
+     - 成功：`status=active, currentStage=completed, lastIngestedAt=now`。
+     - 失败：`status=failed, currentStage=failed, errorMessage=具体错误`。
+   - 兼容要求：
+     - 保留 SSE 后端能力，但前端本轮不强依赖。
+   - 验收：
+     - 手工触发一次 github 上传后，在数据库能看到阶段变化与最终状态。
 
+2. 任务7：文档列表与详情 API 强约束（后端）
+   - 目的：给前端提供稳定分页、筛选、详情能力。
+   - 需要改的文件：
+     - `server/api/documents.get.ts`
+     - `server/api/documents/[id]/index.get.ts`
+     - `server/core/database.ts`
+   - 接口契约：
+     - `GET /api/documents?page=1&pageSize=3&status=all`
+       - `status` 允许：`all|uploading|processing|active|failed|inactive|deleting`
+       - 但实际列表总是排除 `deleting`
+       - 排序固定 `createdAt DESC`
+       - 返回：
+         - `data.items: DocumentRecord[]`
+         - `data.pagination: { page, pageSize, total }`
+     - `GET /api/documents/:id`
+       - 返回完整文档详情字段
+   - 验收：
+     - 创建多条文档后，第一页总是最新 3 条。
+     - 指定 status 筛选生效。
 
+3. 任务8：列表页替换静态数据（前端）
+   - 目的：`ListView` 从真实接口读数据，支持分页与状态显示。
+   - 需要改的文件：
+     - `app/pages/index/components/DocsModal/ListView.vue`
+     - `app/pages/index/components/DocsModal/index.vue`（如需事件通信）
+   - UI 与交互：
+     - 列：`文档名称 | 类型 | 创建时间 | 状态 | 操作`
+     - 分页：每页固定 3 条
+     - 状态中文映射：
+       - uploading=上传中
+       - processing=处理中
+       - active=使用中
+       - failed=失败
+       - inactive=停用
+       - deleting 不显示
+   - 验收：
+     - 打开文档弹窗可看到真实数据，不再是 mock 数据。
 
+4. 任务9：操作列（停用/启用、详情、更多）
+   - 目的：完成文档运维基础操作。
+   - 需要改的文件：
+     - `app/pages/index/components/DocsModal/ListView.vue`
+   - 操作按钮：
+     - 主操作：`停用/启用`、`详情`
+     - 更多（Dropdown/Popover）：`删除`、`更新`
+   - 禁用规则：
+     - `uploading|processing|deleting` 时禁用全部操作
+   - 二次确认文案（必须逐字一致）：
+     - 删除：`确认删除【文档标题】该文档吗？删除后将同时移除相关索引数据，且不可恢复。`
+     - 更新：`确认更新【文档标题】该该文档吗？系统将覆盖当前内容并重建索引，过程中文档状态会变为处理中。`
+   - 验收：
+     - 按钮状态与文档状态联动正确。
 
+5. 任务10：删除流程前后端闭环（软删 + 列表消失）
+   - 目的：实现“安全删除 + 用户视角立即消失”。
+   - 需要改的文件：
+     - `server/api/documents/[id]/index.delete.ts`
+     - `server/core/database.ts`
+     - `app/pages/index/components/DocsModal/ListView.vue`
+   - 后端流程：
+     - 仅 `active|inactive|failed` 可删
+     - 接口立即返回受理：`status=deleting`
+     - 异步执行：删向量 -> 物理删文档
+     - 失败：回滚原状态 + 写 `errorMessage`
+   - 前端流程：
+     - 删除受理后刷新列表，因默认隐藏 `deleting`，该条立即消失
+     - 本轮不做失败主动通知（用户后续可在列表/详情发现）
+   - 验收：
+     - 删除成功后列表消失且数据库物理删除。
+     - 删除失败后文档重新出现并可查看失败原因。
 
+6. 任务11：更新流程闭环（github 重建 / pdf-word 重传）
+   - 目的：统一“覆盖更新”体验。
+   - 需要改的文件：
+     - `server/api/documents/[id]/refresh.post.ts`
+     - `app/pages/index/components/DocsModal/ListView.vue`
+     - `app/pages/index/components/DocsModal/index.vue`
+     - `app/pages/index/components/DocsModal/UploadView.vue`
+   - 后端规则：
+     - GitHub：直接后台重拉重建（先 processing，再 completed/failed）
+     - PDF/Word：返回 `need_reupload`
+     - 更新失败：回滚到更新前状态并写 `errorMessage`
+   - 前端规则：
+     - GitHub 更新：调用 refresh 后回列表并刷新第一页
+     - PDF/Word 更新：跳上传视图并预选类型，重传后回列表刷新
+   - 验收：
+     - 三类来源都能完成“覆盖更新”闭环。
 
+7. 任务12：详情弹窗与失败信息展示
+   - 目的：让用户自行排查失败原因，不依赖消息中心。
+   - 需要改的文件：
+     - `app/pages/index/components/DocsModal/`（新增详情组件）
+   - 展示字段：
+     - `documentId, title, sourceType, sourcePath, branch, status, currentStage, createdAt, updatedAt, lastIngestedAt, chunkCount, version`
+   - 错误展示：
+     - 仅 `status=failed` 时展示 `errorMessage`
+   - 验收：
+     - 失败文档可在详情看到具体错误，非失败状态不展示错误区。
 
+8. 任务13：上传成功回流与列表刷新
+   - 目的：上传完成后用户回到列表并看到最新结果。
+   - 需要改的文件：
+     - `app/pages/index/components/DocsModal/UploadView.vue`
+     - `app/pages/index/components/DocsModal/index.vue`
+     - `app/pages/index/components/DocsModal/ListView.vue`
+   - 行为要求：
+     - 上传成功后自动切回列表视图
+     - 强制刷新第一页
+     - 列表排序按 `createdAt DESC`
+   - 验收：
+     - 新上传文档出现在第一页顶部。
+
+9. 任务14：最终验证与交付整理
+   - 命令验证：
+     - `cmd /c npm run -s typecheck`
+     - `cmd /c npm run -s test:unit`
+   - 功能验证清单：
+     - 列表查询/筛选/分页
+     - 详情弹窗
+     - 停用/启用
+     - 删除（成功与失败回滚）
+     - 更新（github 与 pdf/word）
+   - 文档同步：
+     - 更新 `AI_STATE.md`：完成项、已知问题、后续建议
+
+10. 每任务完成后的固定动作（必须执行）
+   - 1) 更新 `AI_STATE.md` 当前进度
+   - 2) 提交 Git（Conventional Commit 中文）
+   - 3) 尝试 push 到 GitHub（失败记录原因并重试）
+   - 4) 立即暂停，等待用户确认下一条任务
 

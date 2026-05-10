@@ -14,6 +14,11 @@ async function runGithubRefresh(input: {
       documentId: input.documentId,
       repoUrl: input.repoUrl,
       branch: input.branch,
+      onStage: (stage) => {
+        updateDocument(input.documentId, {
+          currentStage: stage,
+        });
+      },
     });
     updateDocument(input.documentId, {
       status: "active",
