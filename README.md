@@ -47,30 +47,10 @@ CHROMA_URL=http://localhost:8000
 npm run dev
 ```
 
-## Ingestion 接口
-
-1. 上传入口：`POST /api/ingestion/upload`
-2. 内容类型：`multipart/form-data`
-3. 参数：
-   - `type=github`：传 `repoUrl`，可选 `branch`
-   - `type=pdf|word`：传 `file`
-4. 返回：`{ code, message, data, timestamp }`
-   - `data.documentId`
-   - `data.ingestionJobId`
-
-## 进度订阅
-
-- SSE：`GET /api/ingestion/jobs/:jobId/events`
-- 阶段事件：`queued -> parsing -> chunking -> embedding -> indexing -> completed/failed`
-
 ## 测试
 
-```bash
+````bash
 CHAT_MOCK=1 USE_MOCK_RAG=1 npm run test:unit
 CHAT_MOCK=1 USE_MOCK_RAG=1 npm run test:e2e
-```
-
-## 说明
-
-- 旧的 `npm run ingest` 与 HNSW 离线索引流程已移除。
-- 当前为单 collection 方案，后续可基于 metadata 扩展更细粒度过滤。
+```。
+````

@@ -75,7 +75,6 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
-import { $fetch } from "ohmyfetch";
 import { message } from "ant-design-vue";
 import { DownOutlined } from "@ant-design/icons-vue";
 import DetailView from "./DetailView.vue";

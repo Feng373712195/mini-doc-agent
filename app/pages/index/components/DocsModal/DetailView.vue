@@ -43,7 +43,10 @@
       <a-descriptions-item label="最后摄入">
         {{ doc.lastIngestedAt ? formatTime(doc.lastIngestedAt) : "-" }}
       </a-descriptions-item>
-      <a-descriptions-item v-if="doc.status === 'failed' && doc.errorMessage" label="错误信息">
+      <a-descriptions-item
+        v-if="doc.status === 'failed' && doc.errorMessage"
+        label="错误信息"
+      >
         <a-alert :message="doc.errorMessage" type="error" show-icon />
       </a-descriptions-item>
     </a-descriptions>
@@ -51,7 +54,8 @@
 </template>
 
 <script setup lang="ts">
-import type { DocumentRecord } from "shared/document";
+import { computed } from "vue";
+import type { DocumentRecord } from "~~/shared/document";
 
 const props = defineProps<{
   visible: boolean;
