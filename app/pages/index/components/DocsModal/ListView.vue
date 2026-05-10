@@ -43,48 +43,7 @@
       </template>
     </a-table>
 
-    <a-modal
-      v-model:open="detailModalVisible"
-      title="文档详情"
-      :footer="null"
-      :width="500"
-    >
-      <a-descriptions v-if="selectedDoc" :column="1" bordered>
-        <a-descriptions-item label="文档名称">
-          {{ selectedDoc.title }}
-        </a-descriptions-item>
-        <a-descriptions-item label="类型">
-          {{ selectedDoc.sourceType }}
-        </a-descriptions-item>
-        <a-descriptions-item label="来源">
-          {{ selectedDoc.sourcePath || "-" }}
-        </a-descriptions-item>
-        <a-descriptions-item label="仓库">
-          {{ selectedDoc.repo || "-" }}
-        </a-descriptions-item>
-        <a-descriptions-item label="分支">
-          {{ selectedDoc.branch || "-" }}
-        </a-descriptions-item>
-        <a-descriptions-item label="状态">
-          {{ selectedDoc.status }}
-        </a-descriptions-item>
-        <a-descriptions-item label="当前阶段">
-          {{ selectedDoc.currentStage || "-" }}
-        </a-descriptions-item>
-        <a-descriptions-item label="块数量">
-          {{ selectedDoc.chunkCount }}
-        </a-descriptions-item>
-        <a-descriptions-item label="错误信息" v-if="selectedDoc.errorMessage">
-          {{ selectedDoc.errorMessage }}
-        </a-descriptions-item>
-        <a-descriptions-item label="创建时间">
-          {{ selectedDoc.createdAt }}
-        </a-descriptions-item>
-        <a-descriptions-item label="最后更新">
-          {{ selectedDoc.updatedAt }}
-        </a-descriptions-item>
-      </a-descriptions>
-    </a-modal>
+    <DetailView v-model:visible="detailModalVisible" :doc="selectedDoc" />
 
     <a-modal
       v-model:open="deleteModalVisible"
@@ -119,9 +78,14 @@ import { ref, computed, watch } from "vue";
 import { $fetch } from "ohmyfetch";
 import { message } from "ant-design-vue";
 import { DownOutlined } from "@ant-design/icons-vue";
+import DetailView from "./DetailView.vue";
 
 const emit = defineEmits<{
-  "need-reupload": [documentId: string, sourceType: "github" | "pdf" | "word", title: string];
+  "need-reupload": [
+    documentId: string,
+    sourceType: "github" | "pdf" | "word",
+    title: string,
+  ];
 }>();
 
 interface DocumentRecord {
@@ -338,12 +302,7 @@ function showDetail(record: (typeof tableData.value)[0]) {
     (d) => d.documentId === record.documentId,
   );
   if (originalDoc) {
-    selectedDoc.value = {
-      ...originalDoc,
-      sourceType:
-        sourceTypeMap[originalDoc.sourceType] || originalDoc.sourceType,
-      status: statusMap[originalDoc.status] || originalDoc.status,
-    };
+    selectedDoc.value = originalDoc;
     detailModalVisible.value = true;
   }
 }
@@ -401,8 +360,17 @@ async function handleRefreshConfirm() {
       if (response.data.mode === "background_refresh") {
         message.success("已开始更新，请稍候");
         fetchDocuments();
-      } else if (response.data.mode === "need_reupload" && response.data.sourceType && response.data.title) {
-        emit("need-reupload", response.data.documentId!, response.data.sourceType, response.data.title);
+      } else if (
+        response.data.mode === "need_reupload" &&
+        response.data.sourceType &&
+        response.data.title
+      ) {
+        emit(
+          "need-reupload",
+          response.data.documentId!,
+          response.data.sourceType,
+          response.data.title,
+        );
       }
     } else {
       message.error(response.message || "更新失败");
