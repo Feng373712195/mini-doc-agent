@@ -387,6 +387,11 @@ fetchDocuments();
 defineExpose({
   refresh: fetchDocuments,
 });
+
+async function refreshFirstPage() {
+  currentPage.value = 1;
+  await fetchDocuments();
+}
 </script>
 
 <style lang="less" scoped>

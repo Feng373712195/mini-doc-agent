@@ -9,12 +9,21 @@
   >
     <div class="docs-modal">
       <div class="modal-content">
-        <ListView v-if="currentView === 'list'" ref="listViewRef" @need-reupload="handleNeedReupload" />
+        <ListView
+          v-if="currentView === 'list'"
+          ref="listViewRef"
+          @need-reupload="handleNeedReupload"
+        />
         <UploadTypesView
           v-else-if="currentView === 'upload-types'"
           @select="onSelectType"
         />
-        <UploadView v-else-if="currentView === 'upload'" :type="uploadType" :update-mode="updateMode" @completed="onUploadCompleted" />
+        <UploadView
+          v-else-if="currentView === 'upload'"
+          :type="uploadType"
+          :update-mode="updateMode"
+          @completed="onUploadCompleted"
+        />
       </div>
 
       <div class="modal-footer">
@@ -67,7 +76,9 @@ function onSelectType(type: "github" | "pdf" | "word") {
 function goBack() {
   if (viewHistory.value.length > 1) {
     viewHistory.value.pop();
-    currentView.value = viewHistory.value[viewHistory.value.length - 1] as ViewType;
+    currentView.value = viewHistory.value[
+      viewHistory.value.length - 1
+    ] as ViewType;
     if (currentView.value === "list") {
       uploadType.value = null;
       updateMode.value = null;
@@ -80,7 +91,7 @@ function onUploadCompleted() {
   uploadType.value = null;
   updateMode.value = null;
   viewHistory.value = ["list"];
-  listViewRef.value?.refresh();
+  listViewRef.value?.refreshFirstPage();
 }
 
 function onCancel() {
@@ -91,7 +102,11 @@ function onCancel() {
   viewHistory.value = ["list"];
 }
 
-function handleNeedReupload(documentId: string, sourceType: "github" | "pdf" | "word", title: string) {
+function handleNeedReupload(
+  documentId: string,
+  sourceType: "github" | "pdf" | "word",
+  title: string,
+) {
   uploadType.value = sourceType;
   updateMode.value = { documentId, title };
   currentView.value = "upload";
