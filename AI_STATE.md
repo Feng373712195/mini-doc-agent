@@ -29,6 +29,15 @@
 
 ## 本轮已完成任务
 
+- 任务5：文档更新接口（2026-05-10）
+  - 新增 POST /api/documents/:id/refresh`r
+  - GitHub 类型支持后台覆盖重建（processing + queued -> completed/failed）
+  - PDF/Word 返回 
+eed_reupload，前端复用上传弹窗处理
+  - 失败回滚原状态并写入错误信息
+  - 
+pm run typecheck 通过
+
 - 任务4：文档删除接口（2026-05-10）
   - 新增 DELETE /api/documents/:id，采用软删受理（先置 deleting）
   - 后端异步执行删除向量与物理删文档
@@ -107,6 +116,7 @@ pm run typecheck 仍有既有问题：pp/plugins/antd.ts 对 nt-design-vue/dis
 1. 补齐上传进度与文档状态的前端接入
 2. 增强错误处理与重试策略（上传、解析、入库）
 3. 增加 ingestion 链路单元测试与集成测试
+
 
 
 
