@@ -78,7 +78,16 @@ import { ref, computed, watch } from "vue";
 import { message } from "ant-design-vue";
 import { DownOutlined } from "@ant-design/icons-vue";
 import DetailView from "./DetailView.vue";
-import type { DocumentRecord, DocumentStatus, DocumentSourceType } from "~~/shared/document";
+import type { DocumentRecord, DocumentSourceType } from "~~/shared/document";
+import type {
+  DocumentListResponse,
+  DocumentStatusToggleResponse,
+  DocumentRefreshResponse,
+} from "~~/shared/api";
+import {
+  DOCUMENT_STATUS_LABELS,
+  DOCUMENT_SOURCE_TYPE_LABELS,
+} from "~~/shared/constants/document";
 
 const emit = defineEmits<{
   "need-reupload": [
@@ -87,56 +96,6 @@ const emit = defineEmits<{
     title: string,
   ];
 }>();
-
-interface ApiResponse {
-  code: number;
-  message: string;
-  data: {
-    items: DocumentRecord[];
-    pagination: {
-      page: number;
-      pageSize: number;
-      total: number;
-    };
-  };
-  timestamp: number;
-}
-
-interface StatusToggleResponse {
-  code: number;
-  message: string;
-  data: {
-    documentId: string;
-    status: string;
-  };
-  timestamp: number;
-}
-
-interface RefreshResponse {
-  code: number;
-  message: string;
-  data: {
-    mode: "background_refresh" | "need_reupload";
-    documentId?: string;
-    sourceType?: DocumentSourceType;
-    title?: string;
-  };
-  timestamp: number;
-}
-
-const statusMap: Record<string, string> = {
-  uploading: "上传中",
-  processing: "处理中",
-  active: "使用中",
-  failed: "失败",
-  inactive: "停用",
-};
-
-const sourceTypeMap: Record<string, string> = {
-  github: "GitHub",
-  pdf: "PDF",
-  word: "Word",
-};
 
 const columns = [
   {
@@ -189,10 +148,10 @@ const tableData = computed(() =>
     key: doc.documentId,
     documentId: doc.documentId,
     title: doc.title,
-    sourceType: sourceTypeMap[doc.sourceType] || doc.sourceType,
+    sourceType: DOCUMENT_SOURCE_TYPE_LABELS[doc.sourceType] || doc.sourceType,
     sourceTypeRaw: doc.sourceType,
     createdAt: formatTime(doc.createdAt),
-    status: statusMap[doc.status] || doc.status,
+    status: DOCUMENT_STATUS_LABELS[doc.status] || doc.status,
     statusRaw: doc.status,
     sourcePath: doc.sourcePath,
     repo: doc.repo,
@@ -226,7 +185,7 @@ function isBusy(status: string): boolean {
 async function fetchDocuments() {
   loading.value = true;
   try {
-    const response = await $fetch<ApiResponse>("/api/documents", {
+    const response = await $fetch<DocumentListResponse>("/api/documents", {
       query: {
         page: currentPage.value,
         pageSize: pageSize.value,
@@ -263,7 +222,7 @@ watch(
 async function toggleStatus(record: (typeof tableData.value)[0]) {
   const newStatus = record.statusRaw === "active" ? "inactive" : "active";
   try {
-    const response = await $fetch<StatusToggleResponse>(
+    const response = await $fetch<DocumentStatusToggleResponse>(
       `/api/documents/${record.documentId}/status`,
       {
         method: "PATCH",
@@ -332,7 +291,7 @@ async function handleRefreshConfirm() {
   if (!refreshTarget.value) return;
   actionLoading.value = true;
   try {
-    const response = await $fetch<RefreshResponse>(
+    const response = await $fetch<DocumentRefreshResponse>(
       `/api/documents/${refreshTarget.value.documentId}/refresh`,
       {
         method: "POST",
