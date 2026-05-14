@@ -6,6 +6,7 @@ import { runIngestionJob } from "~~/server/services/ingestionJobs";
 import { runUploadIngestion, saveUploadFile } from "~~/server/ingestion/runUploadIngestion";
 import { isDocumentSourceType } from "~~/server/utils/typeGuards";
 import { UPLOAD_CONFIG } from "~~/server/config";
+import { SUCCESS_MESSAGES } from "~~/shared/constants/messages";
 import type { IngestionUploadResponse, IngestionUploadType } from "~~/shared/ingestion";
 
 type FormPart = {
@@ -82,7 +83,7 @@ export default defineEventHandler(async (event): Promise<IngestionUploadResponse
       ingestionJobId,
       type,
       createdAt: document.createdAt,
-    }, "accepted");
+    }, SUCCESS_MESSAGES.OPERATION_ACCEPTED);
   }
 
   const filePart = findPart(parts, "file");
@@ -135,5 +136,5 @@ export default defineEventHandler(async (event): Promise<IngestionUploadResponse
     ingestionJobId,
     type,
     createdAt: document.createdAt,
-  }, "accepted");
+  }, SUCCESS_MESSAGES.OPERATION_ACCEPTED);
 });

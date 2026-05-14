@@ -1,6 +1,7 @@
 ﻿import { createError, defineEventHandler, getRouterParam } from "h3";
 import { getDocumentById } from "~~/server/repositories/documentRepository";
 import { createSuccessResponse } from "~~/server/utils/response";
+import { ERROR_MESSAGES } from "~~/shared/constants/messages";
 
 export default defineEventHandler((event) => {
   const id = getRouterParam(event, "id");
@@ -13,5 +14,5 @@ export default defineEventHandler((event) => {
     throw createError({ statusCode: 404, statusMessage: "Document not found" });
   }
 
-  return createSuccessResponse(document);
+  return createSuccessResponse(document, "查询成功");
 });

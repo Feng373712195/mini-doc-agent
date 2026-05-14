@@ -1,6 +1,7 @@
 ﻿import { createError, defineEventHandler, getRouterParam, readBody } from "h3";
 import { getDocumentById, updateDocument } from "~~/server/repositories/documentRepository";
 import { createSuccessResponse } from "~~/server/utils/response";
+import { SUCCESS_MESSAGES } from "~~/shared/constants/messages";
 import type { DocumentStatus } from "~~/shared/document";
 
 type Body = {
@@ -36,5 +37,5 @@ export default defineEventHandler(async (event) => {
   return createSuccessResponse({
     documentId: id,
     status: nextStatus,
-  });
+  }, SUCCESS_MESSAGES.STATUS_UPDATED);
 });

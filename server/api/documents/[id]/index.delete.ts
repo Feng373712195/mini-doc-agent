@@ -6,6 +6,7 @@ import {
 } from "~~/server/repositories/documentRepository";
 import { createSuccessResponse } from "~~/server/utils/response";
 import { getVectorStoreService } from "~~/server/services/vectorStore";
+import { SUCCESS_MESSAGES } from "~~/shared/constants/messages";
 
 async function runDeleteDocument(documentId: string, previousStatus: "active" | "inactive" | "failed") {
   try {
@@ -44,6 +45,6 @@ export default defineEventHandler(async (event) => {
       documentId: id,
       status: "deleting",
     },
-    "accepted"
+    SUCCESS_MESSAGES.OPERATION_ACCEPTED
   );
 });

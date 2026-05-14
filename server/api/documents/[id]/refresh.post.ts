@@ -3,6 +3,7 @@ import { getDocumentById } from "~~/server/repositories/documentRepository";
 import { createSuccessResponse } from "~~/server/utils/response";
 import { runIngestionJob } from "~~/server/services/ingestionJobs";
 import { runUploadIngestion } from "~~/server/ingestion/runUploadIngestion";
+import { SUCCESS_MESSAGES } from "~~/shared/constants/messages";
 
 /**
  * 刷新文档接口
@@ -69,7 +70,7 @@ export default defineEventHandler(async (event) => {
         documentId: id,
         mode: "background_refresh",
       },
-      "accepted"
+      SUCCESS_MESSAGES.OPERATION_ACCEPTED
     );
   }
 
@@ -83,6 +84,6 @@ export default defineEventHandler(async (event) => {
       sourceType: document.sourceType,
       title: document.title,
     },
-    "need_reupload"
+    "需要重新上传"
   );
 });

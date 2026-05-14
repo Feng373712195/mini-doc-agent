@@ -5,6 +5,7 @@
 
 import { ref, computed, onBeforeUnmount } from "vue";
 import { message } from "ant-design-vue";
+import { SUCCESS_MESSAGES, ERROR_MESSAGES } from "~~/shared/constants/messages";
 
 /**
  * 上传模式配置
@@ -59,7 +60,7 @@ export function useDocumentUpload(
     uploading.value = false;
     closeProgressStream();
     if (success) {
-      message.success(updateMode ? "更新并入库成功" : "上传并入库成功");
+      message.success(updateMode ? SUCCESS_MESSAGES.UPDATE_SUCCESS : SUCCESS_MESSAGES.UPLOAD_SUCCESS);
     }
     onCompleted();
   }
@@ -86,7 +87,7 @@ export function useDocumentUpload(
         onUploadComplete(true);
       }
       if (payload.stage === "failed") {
-        message.error(payload.message || "上传失败");
+        message.error(payload.message || ERROR_MESSAGES.UPLOAD_FAILED);
         onUploadComplete(false);
       }
     });
@@ -118,7 +119,7 @@ export function useDocumentUpload(
       subscribeProgress(resp.data.ingestionJobId);
     } catch (err) {
       uploading.value = false;
-      message.error(err instanceof Error ? err.message : "上传失败");
+      message.error(err instanceof Error ? err.message : ERROR_MESSAGES.UPLOAD_FAILED);
       onCompleted();
     }
   }

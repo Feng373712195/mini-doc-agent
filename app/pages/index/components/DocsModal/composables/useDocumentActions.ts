@@ -10,6 +10,7 @@ import type {
   DocumentStatusToggleResponse,
   DocumentRefreshResponse,
 } from "~~/shared/api";
+import { SUCCESS_MESSAGES, ERROR_MESSAGES } from "~~/shared/constants/messages";
 
 /**
  * 文档操作的回调函数类型
@@ -99,17 +100,17 @@ export function useDocumentActions(callbacks: DocumentActionsCallbacks) {
         },
       );
       if (response.code === 0) {
-        message.success("删除成功");
+        message.success(SUCCESS_MESSAGES.DELETE_SUCCESS);
         deleteModalVisible.value = false;
         deleteTarget.value = null;
         callbacks.onRefreshNeeded();
         return true;
       } else {
-        message.error(response.message || "删除失败");
+        message.error(response.message || ERROR_MESSAGES.DOCUMENT_DELETE_FAILED);
         return false;
       }
     } catch (error) {
-      message.error("删除失败");
+      message.error(ERROR_MESSAGES.DOCUMENT_DELETE_FAILED);
       return false;
     } finally {
       actionLoading.value = false;
@@ -161,10 +162,10 @@ export function useDocumentActions(callbacks: DocumentActionsCallbacks) {
           );
         }
       } else {
-        message.error(response.message || "更新失败");
+        message.error(response.message || ERROR_MESSAGES.DOCUMENT_REFRESH_FAILED);
       }
     } catch (error) {
-      message.error("更新失败");
+      message.error(ERROR_MESSAGES.DOCUMENT_REFRESH_FAILED);
     } finally {
       actionLoading.value = false;
     }
