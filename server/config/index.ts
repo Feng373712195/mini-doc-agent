@@ -29,4 +29,8 @@ export const CHUNK_CONFIG = {
 export const UPLOAD_CONFIG = {
   /** 最大文件大小（字节），默认 10MB */
   maxFileSize: 10 * 1024 * 1024,
+  /** 文件名最大长度（字符数） */
+  maxFilenameLength: 200,
+  /** 允许的文件扩展名白名单 */
+  allowedExtensions: [".pdf", ".doc", ".docx"],
 } as const;

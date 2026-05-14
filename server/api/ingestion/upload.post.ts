@@ -5,6 +5,7 @@ import { createSuccessResponse } from "~~/server/utils/response";
 import { runIngestionJob } from "~~/server/services/ingestionJobs";
 import { runUploadIngestion, saveUploadFile } from "~~/server/ingestion/runUploadIngestion";
 import { isDocumentSourceType } from "~~/server/utils/typeGuards";
+import { UPLOAD_CONFIG } from "~~/server/config";
 import type { IngestionUploadResponse, IngestionUploadType } from "~~/shared/ingestion";
 
 type FormPart = {
@@ -87,6 +88,15 @@ export default defineEventHandler(async (event): Promise<IngestionUploadResponse
   const filePart = findPart(parts, "file");
   if (!filePart?.filename || !filePart?.data) {
     throw createError({ statusCode: 400, statusMessage: "Missing file" });
+  }
+
+  // 验证文件大小限制
+  if (filePart.data.length > UPLOAD_CONFIG.maxFileSize) {
+    const maxSizeMB = Math.round(UPLOAD_CONFIG.maxFileSize / 1024 / 1024);
+    throw createError({ 
+      statusCode: 413, 
+      statusMessage: `File size exceeds ${maxSizeMB}MB limit` 
+    });
   }
 
   const document = createDocument({
