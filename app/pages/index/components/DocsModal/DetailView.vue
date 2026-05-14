@@ -35,13 +35,13 @@
         {{ doc.version || "-" }}
       </a-descriptions-item>
       <a-descriptions-item label="创建时间">
-        {{ formatTime(doc.createdAt) }}
+        {{ formatDateTime(doc.createdAt) }}
       </a-descriptions-item>
       <a-descriptions-item label="最后更新">
-        {{ formatTime(doc.updatedAt) }}
+        {{ formatDateTime(doc.updatedAt) }}
       </a-descriptions-item>
       <a-descriptions-item label="最后摄入">
-        {{ doc.lastIngestedAt ? formatTime(doc.lastIngestedAt) : "-" }}
+        {{ doc.lastIngestedAt ? formatDateTime(doc.lastIngestedAt) : "-" }}
       </a-descriptions-item>
       <a-descriptions-item
         v-if="doc.status === 'failed' && doc.errorMessage"
@@ -61,6 +61,7 @@ import {
   DOCUMENT_SOURCE_TYPE_LABELS,
   DOCUMENT_STAGE_LABELS,
 } from "~~/shared/constants/document";
+import { formatDateTime } from "~~/app/utils/date";
 
 const props = defineProps<{
   visible: boolean;
@@ -75,12 +76,6 @@ const visible = computed({
   get: () => props.visible,
   set: (value) => emit("update:visible", value),
 });
-
-function formatTime(timestamp: number): string {
-  const date = new Date(timestamp);
-  const pad = (n: number) => n.toString().padStart(2, "0");
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
-}
 
 function onClose() {
   visible.value = false;

@@ -48,7 +48,7 @@
               <div class="conversation-item-content">
                 <div class="conversation-title">{{ item.title }}</div>
                 <div class="conversation-time">
-                  {{ formatTime(item.updatedAt) }}
+                  {{ formatDateTimeLocale(item.updatedAt) }}
                 </div>
               </div>
             </a-list-item>
@@ -119,6 +119,7 @@ import { computed, nextTick, onMounted, ref, shallowRef } from "vue";
 import type { Conversation, Message } from "~~/shared/chat";
 import { useMessages } from "./composables/useMessages";
 import DocsModal from "./components/DocsModal/index.vue";
+import { formatDateTimeLocale } from "~~/app/utils/date";
 
 /**
  * Chat 主页面
@@ -177,11 +178,6 @@ const filteredConversations = computed(() => {
     c.title.toLowerCase().includes(q),
   );
 });
-
-function formatTime(ms: number) {
-  const d = new Date(ms);
-  return d.toLocaleString();
-}
 
 /**
  * 从服务器刷新会话列表，并自动选中第一个

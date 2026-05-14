@@ -88,6 +88,7 @@ import {
   DOCUMENT_STATUS_LABELS,
   DOCUMENT_SOURCE_TYPE_LABELS,
 } from "~~/shared/constants/document";
+import { formatDateTime } from "~~/app/utils/date";
 
 const emit = defineEmits<{
   "need-reupload": [
@@ -150,7 +151,7 @@ const tableData = computed(() =>
     title: doc.title,
     sourceType: DOCUMENT_SOURCE_TYPE_LABELS[doc.sourceType] || doc.sourceType,
     sourceTypeRaw: doc.sourceType,
-    createdAt: formatTime(doc.createdAt),
+    createdAt: formatDateTime(doc.createdAt),
     status: DOCUMENT_STATUS_LABELS[doc.status] || doc.status,
     statusRaw: doc.status,
     sourcePath: doc.sourcePath,
@@ -159,8 +160,8 @@ const tableData = computed(() =>
     currentStage: doc.currentStage,
     chunkCount: doc.chunkCount,
     errorMessage: doc.errorMessage,
-    updatedAt: formatTime(doc.updatedAt),
-    lastIngestedAt: doc.lastIngestedAt ? formatTime(doc.lastIngestedAt) : null,
+    updatedAt: formatDateTime(doc.updatedAt),
+    lastIngestedAt: doc.lastIngestedAt ? formatDateTime(doc.lastIngestedAt) : null,
   })),
 );
 
@@ -171,12 +172,6 @@ const paginationConfig = computed(() => ({
   showSizeChanger: false,
   position: ["bottomCenter"],
 }));
-
-function formatTime(timestamp: number): string {
-  const date = new Date(timestamp);
-  const pad = (n: number) => n.toString().padStart(2, "0");
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
-}
 
 function isBusy(status: string): boolean {
   return ["uploading", "processing", "deleting"].includes(status);
