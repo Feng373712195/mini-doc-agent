@@ -95,7 +95,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref } from "vue";
+import { ref } from "vue";
 import { message } from "ant-design-vue";
 import { UploadOutlined } from "@ant-design/icons-vue";
 import type { UploadProps, UploadFile } from "ant-design-vue";
@@ -104,6 +104,7 @@ import {
   validateWordFile,
   validateUrl,
 } from "~~/app/utils/fileValidation";
+import { useDocumentUpload } from "./composables/useDocumentUpload";
 
 const emit = defineEmits<{
   completed: [];
@@ -122,77 +123,11 @@ const pdfError = ref("");
 const wordFileList = ref<UploadFile[]>([]);
 const wordError = ref("");
 
-const uploading = ref(false);
-const progress = ref(0);
-const progressText = ref("");
-let eventSource: EventSource | null = null;
-
-const progressStatus = computed(() =>
-  progress.value >= 100 ? "success" : "active",
-);
-
-function closeProgressStream() {
-  eventSource?.close();
-  eventSource = null;
-}
-
-function onUploadComplete(success: boolean) {
-  uploading.value = false;
-  closeProgressStream();
-  if (success) {
-    message.success(props.updateMode ? "更新并入库成功" : "上传并入库成功");
-  }
-  emit("completed");
-}
-
-function subscribeProgress(jobId: string) {
-  closeProgressStream();
-  eventSource = new EventSource(
-    `/api/ingestion/jobs/${encodeURIComponent(jobId)}/events`,
-  );
-  eventSource.addEventListener("progress", (evt: MessageEvent) => {
-    const payload = JSON.parse(evt.data) as {
-      stage: string;
-      progress: number;
-      message?: string;
-    };
-    progress.value = payload.progress || 0;
-    progressText.value = payload.message || payload.stage;
-    if (payload.stage === "completed") {
-      onUploadComplete(true);
-    }
-    if (payload.stage === "failed") {
-      message.error(payload.message || "上传失败");
-      onUploadComplete(false);
-    }
-  });
-}
-
-async function submit(formData: FormData) {
-  uploading.value = true;
-  progress.value = 0;
-  progressText.value = "queued";
-
-  try {
-    const url = props.updateMode 
-      ? `/api/documents/${props.updateMode.documentId}/update` 
-      : "/api/ingestion/upload";
-    const resp = await $fetch<{
-      code: number;
-      message: string;
-      data: { ingestionJobId: string };
-      timestamp: number;
-    }>(url, {
-      method: "POST",
-      body: formData,
-    });
-    subscribeProgress(resp.data.ingestionJobId);
-  } catch (err) {
-    uploading.value = false;
-    message.error(err instanceof Error ? err.message : "上传失败");
+// 使用文档上传管理 composable
+const { uploading, progress, progressText, progressStatus, submit } =
+  useDocumentUpload(props.updateMode, () => {
     emit("completed");
-  }
-}
+  });
 
 function onGithubUpload() {
   urlError.value = "";
@@ -253,10 +188,6 @@ function onFileUpload(uploadType: "pdf" | "word") {
   formData.append("file", selected.originFileObj);
   void submit(formData);
 }
-
-onBeforeUnmount(() => {
-  closeProgressStream();
-});
 </script>
 
 <style lang="less" scoped>
