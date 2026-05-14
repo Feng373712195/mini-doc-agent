@@ -9,6 +9,12 @@ import type {
   DocumentStatus,
   UpdateDocumentInput,
 } from "~~/shared/document";
+import type {
+  DbConversationRow,
+  DbMessageRow,
+  DbDocumentRow,
+  DbCountRow,
+} from "~~/server/types/database";
 
 // 数据库单例
 let dbSingleton: Database.Database | null = null;
@@ -134,10 +140,15 @@ export function listConversations(limit = 50, offset = 0): Conversation[] {
   const db = getDb();
   const rows = db
     .prepare(
-      "SELECT id, title, created_at as createdAt, updated_at as updatedAt FROM conversations ORDER BY updated_at DESC LIMIT ? OFFSET ?"
+      "SELECT id, title, created_at, updated_at FROM conversations ORDER BY updated_at DESC LIMIT ? OFFSET ?"
     )
-    .all(limit, offset) as Conversation[];
-  return rows;
+    .all(limit, offset) as DbConversationRow[];
+  return rows.map((row) => ({
+    id: row.id,
+    title: row.title,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  }));
 }
 
 /**
@@ -172,10 +183,17 @@ export function getMessages(conversationId: string): Message[] {
   const db = getDb();
   const rows = db
     .prepare(
-      "SELECT id, conversation_id as conversationId, role, content, created_at as createdAt, updated_at as updatedAt FROM messages WHERE conversation_id=? ORDER BY created_at ASC"
+      "SELECT id, conversation_id, role, content, created_at, updated_at FROM messages WHERE conversation_id=? ORDER BY created_at ASC"
     )
-    .all(conversationId) as Message[];
-  return rows;
+    .all(conversationId) as DbMessageRow[];
+  return rows.map((row) => ({
+    id: row.id,
+    conversationId: row.conversation_id,
+    role: row.role as Role,
+    content: row.content,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  }));
 }
 
 /**
@@ -199,17 +217,24 @@ export function getMessagesPage(params: {
   const rows = beforeCreatedAt
     ? (db
         .prepare(
-          "SELECT id, conversation_id as conversationId, role, content, created_at as createdAt, updated_at as updatedAt FROM messages WHERE conversation_id=? AND created_at < ? ORDER BY created_at DESC LIMIT ?"
+          "SELECT id, conversation_id, role, content, created_at, updated_at FROM messages WHERE conversation_id=? AND created_at < ? ORDER BY created_at DESC LIMIT ?"
         )
-        .all(params.conversationId, beforeCreatedAt, limit) as Message[])
+        .all(params.conversationId, beforeCreatedAt, limit) as DbMessageRow[])
     : (db
         .prepare(
-          "SELECT id, conversation_id as conversationId, role, content, created_at as createdAt, updated_at as updatedAt FROM messages WHERE conversation_id=? ORDER BY created_at DESC LIMIT ?"
+          "SELECT id, conversation_id, role, content, created_at, updated_at FROM messages WHERE conversation_id=? ORDER BY created_at DESC LIMIT ?"
         )
-        .all(params.conversationId, limit) as Message[]);
+        .all(params.conversationId, limit) as DbMessageRow[]);
 
   // 查询结果是倒序的（DESC），需要反转为升序以便 UI 渲染
-  return rows.reverse();
+  return rows.reverse().map((row) => ({
+    id: row.id,
+    conversationId: row.conversation_id,
+    role: row.role as Role,
+    content: row.content,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  }));
 }
 
 /**
@@ -260,32 +285,40 @@ export function getLatestUserMessage(conversationId: string): Message | null {
   const db = getDb();
   const row = db
     .prepare(
-      "SELECT id, conversation_id as conversationId, role, content, created_at as createdAt, updated_at as updatedAt FROM messages WHERE conversation_id=? AND role='user' ORDER BY created_at DESC LIMIT 1"
+      "SELECT id, conversation_id, role, content, created_at, updated_at FROM messages WHERE conversation_id=? AND role='user' ORDER BY created_at DESC LIMIT 1"
     )
-    .get(conversationId) as Message | undefined;
-  return row || null;
+    .get(conversationId) as DbMessageRow | undefined;
+  if (!row) return null;
+  return {
+    id: row.id,
+    conversationId: row.conversation_id,
+    role: row.role as Role,
+    content: row.content,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
 }
 
-function mapDocumentRow(row: any): DocumentRecord {
+function mapDocumentRow(row: DbDocumentRow): DocumentRecord {
   return {
-    documentId: row.documentId,
+    documentId: row.document_id,
     title: row.title,
-    sourceType: row.sourceType,
-    sourcePath: row.sourcePath,
+    sourceType: row.source_type as DocumentRecord["sourceType"],
+    sourcePath: row.source_path,
     repo: row.repo,
     branch: row.branch,
-    contentHash: row.contentHash,
-    commitHash: row.commitHash,
+    contentHash: row.content_hash,
+    commitHash: row.commit_hash,
     version: row.version,
-    status: row.status,
-    currentStage: row.currentStage,
-    chunkCount: row.chunkCount,
-    errorMessage: row.errorMessage,
-    ingestionJobId: row.ingestionJobId,
-    createdAt: row.createdAt,
-    updatedAt: row.updatedAt,
-    lastIngestedAt: row.lastIngestedAt,
-    deletedAt: row.deletedAt,
+    status: row.status as DocumentStatus,
+    currentStage: row.current_stage as DocumentRecord["currentStage"],
+    chunkCount: row.chunk_count,
+    errorMessage: row.error_message,
+    ingestionJobId: row.ingestion_job_id,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    lastIngestedAt: row.last_ingested_at,
+    deletedAt: row.deleted_at,
   };
 }
 
@@ -323,27 +356,27 @@ export function getDocumentById(documentId: string): DocumentRecord | null {
   const row = db
     .prepare(
       `SELECT
-        document_id as documentId,
+        document_id,
         title,
-        source_type as sourceType,
-        source_path as sourcePath,
+        source_type,
+        source_path,
         repo,
         branch,
-        content_hash as contentHash,
-        commit_hash as commitHash,
+        content_hash,
+        commit_hash,
         version,
         status,
-        current_stage as currentStage,
-        chunk_count as chunkCount,
-        error_message as errorMessage,
-        ingestion_job_id as ingestionJobId,
-        created_at as createdAt,
-        updated_at as updatedAt,
-        last_ingested_at as lastIngestedAt,
-        deleted_at as deletedAt
+        current_stage,
+        chunk_count,
+        error_message,
+        ingestion_job_id,
+        created_at,
+        updated_at,
+        last_ingested_at,
+        deleted_at
       FROM documents WHERE document_id=?`
     )
-    .get(documentId) as any;
+    .get(documentId) as DbDocumentRow | undefined;
   return row ? mapDocumentRow(row) : null;
 }
 
@@ -356,24 +389,24 @@ export function getDocumentBySource(params: {
   const row = db
     .prepare(
       `SELECT
-        document_id as documentId,
+        document_id,
         title,
-        source_type as sourceType,
-        source_path as sourcePath,
+        source_type,
+        source_path,
         repo,
         branch,
-        content_hash as contentHash,
-        commit_hash as commitHash,
+        content_hash,
+        commit_hash,
         version,
         status,
-        current_stage as currentStage,
-        chunk_count as chunkCount,
-        error_message as errorMessage,
-        ingestion_job_id as ingestionJobId,
-        created_at as createdAt,
-        updated_at as updatedAt,
-        last_ingested_at as lastIngestedAt,
-        deleted_at as deletedAt
+        current_stage,
+        chunk_count,
+        error_message,
+        ingestion_job_id,
+        created_at,
+        updated_at,
+        last_ingested_at,
+        deleted_at
       FROM documents
       WHERE source_type = ?
         AND ((source_path IS NULL AND ? IS NULL) OR source_path = ?)
@@ -386,7 +419,7 @@ export function getDocumentBySource(params: {
       params.sourcePath,
       params.branch,
       params.branch
-    ) as any;
+    ) as DbDocumentRow | undefined;
   return row ? mapDocumentRow(row) : null;
 }
 
@@ -464,37 +497,37 @@ export function listDocuments(params: {
   const rows = db
     .prepare(
       `SELECT
-        document_id as documentId,
+        document_id,
         title,
-        source_type as sourceType,
-        source_path as sourcePath,
+        source_type,
+        source_path,
         repo,
         branch,
-        content_hash as contentHash,
-        commit_hash as commitHash,
+        content_hash,
+        commit_hash,
         version,
         status,
-        current_stage as currentStage,
-        chunk_count as chunkCount,
-        error_message as errorMessage,
-        ingestion_job_id as ingestionJobId,
-        created_at as createdAt,
-        updated_at as updatedAt,
-        last_ingested_at as lastIngestedAt,
-        deleted_at as deletedAt
+        current_stage,
+        chunk_count,
+        error_message,
+        ingestion_job_id,
+        created_at,
+        updated_at,
+        last_ingested_at,
+        deleted_at
       FROM documents
       ${whereSql}
       ORDER BY created_at DESC
       LIMIT ? OFFSET ?`
     )
-    .all(...values, pageSize, offset) as any[];
+    .all(...values, pageSize, offset) as DbDocumentRow[];
 
-  const total = db
+  const countRow = db
     .prepare(`SELECT COUNT(1) as total FROM documents ${whereSql}`)
-    .get(...values) as { total: number };
+    .get(...values) as DbCountRow;
 
   return {
     items: rows.map((row) => mapDocumentRow(row)),
-    total: total.total,
+    total: countRow.total,
   };
 }
