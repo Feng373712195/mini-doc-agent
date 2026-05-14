@@ -3,6 +3,12 @@ import { getDocumentById } from "~~/server/core/database";
 import { runIngestionJob } from "~~/server/services/ingestionJobs";
 import { runUploadIngestion } from "~~/server/ingestion/runUploadIngestion";
 
+/**
+ * 刷新文档接口
+ * 
+ * GitHub 类型：后台重新拉取并重建索引
+ * PDF/Word 类型：返回 need_reupload，前端引导用户重新上传
+ */
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, "id");
   if (!id) {
@@ -26,6 +32,7 @@ export default defineEventHandler(async (event) => {
 
   const ingestionJobId = `refresh-${id}-${Date.now()}`;
 
+  // GitHub 类型：后台重新拉取并重建索引
   if (document.sourceType === "github") {
     if (!document.sourcePath) {
       throw createError({
@@ -34,7 +41,11 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    void runIngestionJob({
+    console.log(`[refresh] Starting background refresh for GitHub document ${id}`);
+
+    // 异步执行刷新任务，接口立即返回
+    // runIngestionJob 内部已有完整的错误处理，会将错误写入 errorMessage
+    runIngestionJob({
       ingestionJobId,
       documentId: id,
       task: async (emitStage) => {
@@ -46,6 +57,10 @@ export default defineEventHandler(async (event) => {
           onStage: (stage, progress) => emitStage(stage, progress, stage),
         });
       },
+    }).catch((error) => {
+      // 捕获未预期的错误，记录日志
+      // runIngestionJob 的 catch 块已经处理了错误状态更新
+      console.error(`[refresh] Unexpected error in job ${ingestionJobId} for document ${id}:`, error);
     });
 
     return {
@@ -58,6 +73,9 @@ export default defineEventHandler(async (event) => {
       timestamp: Date.now(),
     };
   }
+
+  // PDF/Word 类型：需要用户重新上传文件
+  console.log(`[refresh] Document ${id} (${document.sourceType}) requires reupload`);
 
   return {
     code: 0,
