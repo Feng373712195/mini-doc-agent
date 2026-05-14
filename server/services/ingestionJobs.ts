@@ -71,6 +71,17 @@ export function getLatestJobEvent(ingestionJobId: string): IngestionJobEvent | n
 }
 
 /**
+ * 清理指定任务的事件和监听器
+ * 在任务完成后调用，释放内存，防止内存泄漏
+ * 
+ * @param ingestionJobId - 任务 ID
+ */
+export function cleanupJobEvents(ingestionJobId: string): void {
+  latestEvents.delete(ingestionJobId);
+  listeners.delete(ingestionJobId);
+}
+
+/**
  * 运行文档摄取任务
  * 
  * 统一管理任务的生命周期：
@@ -78,6 +89,7 @@ export function getLatestJobEvent(ingestionJobId: string): IngestionJobEvent | n
  * 2. 执行任务并推送进度事件
  * 3. 成功时更新为 active + completed
  * 4. 失败时更新为 failed 并记录错误
+ * 5. 延迟清理内存，防止内存泄漏
  * 
  * @param params.ingestionJobId - 任务 ID，用于 SSE 事件订阅
  * @param params.documentId - 文档 ID
@@ -146,5 +158,11 @@ export async function runIngestionJob(params: {
       currentStage: "failed",
       errorMessage: message,
     });
+  } finally {
+    // 任务完成后延迟清理内存，确保客户端已接收完所有事件
+    // 延迟 60 秒清理，给客户端足够的时间接收最后的事件
+    setTimeout(() => {
+      cleanupJobEvents(ingestionJobId);
+    }, 60000);
   }
 }
