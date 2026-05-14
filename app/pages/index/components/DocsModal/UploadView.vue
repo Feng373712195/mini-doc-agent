@@ -99,6 +99,11 @@ import { computed, onBeforeUnmount, ref } from "vue";
 import { message } from "ant-design-vue";
 import { UploadOutlined } from "@ant-design/icons-vue";
 import type { UploadProps, UploadFile } from "ant-design-vue";
+import {
+  validatePdfFile,
+  validateWordFile,
+  validateUrl,
+} from "~~/app/utils/fileValidation";
 
 const emit = defineEmits<{
   completed: [];
@@ -125,11 +130,6 @@ let eventSource: EventSource | null = null;
 const progressStatus = computed(() =>
   progress.value >= 100 ? "success" : "active",
 );
-
-function validateUrl(url: string): boolean {
-  const regex = /^https?:\/\/.+/;
-  return regex.test(url);
-}
 
 function closeProgressStream() {
   eventSource?.close();
@@ -214,10 +214,9 @@ function onGithubUpload() {
 
 const beforePdfUpload: UploadProps["beforeUpload"] = (file) => {
   pdfError.value = "";
-  const isPdf =
-    file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
-  if (!isPdf) {
-    pdfError.value = "只能上传 PDF 文件";
+  const result = validatePdfFile(file);
+  if (!result.valid) {
+    pdfError.value = result.error || "文件验证失败";
     return false;
   }
   return false;
@@ -229,14 +228,9 @@ const handlePdfChange: UploadProps["onChange"] = (info) => {
 
 const beforeWordUpload: UploadProps["beforeUpload"] = (file) => {
   wordError.value = "";
-  const isWord =
-    file.type === "application/msword" ||
-    file.type ===
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
-    file.name.toLowerCase().endsWith(".doc") ||
-    file.name.toLowerCase().endsWith(".docx");
-  if (!isWord) {
-    wordError.value = "只能上传 Word 文件";
+  const result = validateWordFile(file);
+  if (!result.valid) {
+    wordError.value = result.error || "文件验证失败";
     return false;
   }
   return false;
