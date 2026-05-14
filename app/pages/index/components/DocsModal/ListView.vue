@@ -80,7 +80,6 @@ import { DownOutlined } from "@ant-design/icons-vue";
 import DetailView from "./DetailView.vue";
 import type { DocumentRecord, DocumentSourceType } from "~~/shared/document";
 import type {
-  DocumentListResponse,
   DocumentStatusToggleResponse,
   DocumentRefreshResponse,
 } from "~~/shared/api";
@@ -89,6 +88,7 @@ import {
   DOCUMENT_SOURCE_TYPE_LABELS,
 } from "~~/shared/constants/document";
 import { formatDateTime } from "~~/app/utils/date";
+import { useDocumentList } from "./composables/useDocumentList";
 
 const emit = defineEmits<{
   "need-reupload": [
@@ -130,13 +130,19 @@ const columns = [
   },
 ];
 
-const loading = ref(false);
-const actionLoading = ref(false);
-const documents = ref<DocumentRecord[]>([]);
-const currentPage = ref(1);
-const pageSize = ref(3);
-const total = ref(0);
+// 使用文档列表数据管理 composable
+const {
+  documents,
+  currentPage,
+  pageSize,
+  total,
+  loading,
+  fetchDocuments,
+  handleTableChange,
+  refreshFirstPage,
+} = useDocumentList();
 
+const actionLoading = ref(false);
 const detailModalVisible = ref(false);
 const deleteModalVisible = ref(false);
 const refreshModalVisible = ref(false);
@@ -175,33 +181,6 @@ const paginationConfig = computed(() => ({
 
 function isBusy(status: string): boolean {
   return ["uploading", "processing", "deleting"].includes(status);
-}
-
-async function fetchDocuments() {
-  loading.value = true;
-  try {
-    const response = await $fetch<DocumentListResponse>("/api/documents", {
-      query: {
-        page: currentPage.value,
-        pageSize: pageSize.value,
-        status: "all",
-      },
-    });
-    if (response.code === 0) {
-      documents.value = response.data.items;
-      total.value = response.data.pagination.total;
-    }
-  } catch (error) {
-    console.error("Failed to fetch documents:", error);
-  } finally {
-    loading.value = false;
-  }
-}
-
-function handleTableChange(pagination: { current: number; pageSize: number }) {
-  currentPage.value = pagination.current;
-  pageSize.value = pagination.pageSize;
-  fetchDocuments();
 }
 
 watch(
@@ -320,11 +299,7 @@ async function handleRefreshConfirm() {
   }
 }
 
-async function refreshFirstPage() {
-  currentPage.value = 1;
-  await fetchDocuments();
-}
-
+// 初始化时加载数据
 fetchDocuments();
 
 defineExpose({
