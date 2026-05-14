@@ -2,6 +2,7 @@ import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import ts from "typescript";
 import crypto from "node:crypto";
 import type { RawDocument } from "~~/server/ingestion/sources/IDataSource";
+import { CHUNK_CONFIG } from "~~/server/config";
 
 export type IngestionChunk = {
   chunkId: string;
@@ -53,7 +54,10 @@ function extractCodeSymbols(content: string): Array<{ text: string; symbol: "fun
 }
 
 export async function chunkDocuments(documents: RawDocument[]): Promise<IngestionChunk[]> {
-  const splitter = new RecursiveCharacterTextSplitter({ chunkSize: 800, chunkOverlap: 100 });
+  const splitter = new RecursiveCharacterTextSplitter({
+    chunkSize: CHUNK_CONFIG.chunkSize,
+    chunkOverlap: CHUNK_CONFIG.chunkOverlap,
+  });
   const chunks: IngestionChunk[] = [];
 
   for (const doc of documents) {

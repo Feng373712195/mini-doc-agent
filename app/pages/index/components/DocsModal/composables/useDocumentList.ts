@@ -6,6 +6,7 @@
 import { ref } from "vue";
 import type { DocumentRecord } from "~~/shared/document";
 import type { DocumentListResponse } from "~~/shared/api";
+import { PAGINATION_CONFIG } from "~~/server/config";
 
 /**
  * 文档列表数据管理
@@ -17,7 +18,7 @@ export function useDocumentList() {
   /** 当前页码 */
   const currentPage = ref(1);
   /** 每页条数 */
-  const pageSize = ref(3);
+  const pageSize = ref<number>(PAGINATION_CONFIG.defaultPageSize);
   /** 总记录数 */
   const total = ref(0);
   /** 加载状态 */

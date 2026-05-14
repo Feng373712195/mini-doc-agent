@@ -12,6 +12,7 @@ import type {
 } from "~~/shared/document";
 import type { DbDocumentRow, DbCountRow } from "~~/server/types/database";
 import { getDb, nowMs } from "~~/server/core/database";
+import { PAGINATION_CONFIG } from "~~/server/config";
 
 /**
  * 将数据库行映射为文档记录对象
