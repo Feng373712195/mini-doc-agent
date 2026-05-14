@@ -15,7 +15,18 @@
     - 禁止在页面中直接编写业务请求逻辑，必须抽离到 composables 或 service 层。
     - 所有功能实现必须保证类型安全（TypeScript），并处理基础错误状态（loading / error / empty）。
 
+## 请严格遵守以下 TypeScript 规范：
 
+- 禁止使用 any
+- 允许使用 unknown，但必须进行类型收窄
+- 所有函数必须显式声明返回类型
+- 所有对象必须显式声明类型
+- 禁止使用隐式 any
+- 禁止省略 import
+- 禁止使用大型混合 interface
+- Promise 必须处理错误
+- 输出代码必须通过 strict 模式 TypeScript 编译
+- 不允许为了通过编译而滥用类型断言
 
 ## mock 设计示例
 
