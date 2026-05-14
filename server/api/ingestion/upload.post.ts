@@ -3,6 +3,7 @@ import { createError, defineEventHandler, readMultipartFormData } from "h3";
 import { createDocument } from "~~/server/core/database";
 import { runIngestionJob } from "~~/server/services/ingestionJobs";
 import { runUploadIngestion, saveUploadFile } from "~~/server/ingestion/runUploadIngestion";
+import { isDocumentSourceType } from "~~/server/utils/typeGuards";
 import type { IngestionUploadResponse, IngestionUploadType } from "~~/shared/ingestion";
 
 type FormPart = {
@@ -21,11 +22,6 @@ function readTextPart(parts: FormPart[], name: string): string | undefined {
   return part.data.toString("utf8").trim();
 }
 
-function assertUploadType(value: string | undefined): IngestionUploadType {
-  if (value === "github" || value === "pdf" || value === "word") return value;
-  throw createError({ statusCode: 400, statusMessage: "Invalid type, expected github|pdf|word" });
-}
-
 export default defineEventHandler(async (event): Promise<IngestionUploadResponse> => {
   // 统一上传入口：通过 multipart + type 分发不同来源
   const parts = (await readMultipartFormData(event)) as FormPart[] | undefined;
@@ -33,7 +29,11 @@ export default defineEventHandler(async (event): Promise<IngestionUploadResponse
     throw createError({ statusCode: 400, statusMessage: "Missing multipart form data" });
   }
 
-  const type = assertUploadType(readTextPart(parts, "type"));
+  const typeValue = readTextPart(parts, "type");
+  if (!isDocumentSourceType(typeValue)) {
+    throw createError({ statusCode: 400, statusMessage: "Invalid type, expected github|pdf|word" });
+  }
+  const type: IngestionUploadType = typeValue;
   const ingestionJobId = nanoid();
 
   if (type === "github") {

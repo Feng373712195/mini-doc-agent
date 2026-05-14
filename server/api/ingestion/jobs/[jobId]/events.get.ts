@@ -1,7 +1,16 @@
 import { defineEventHandler, getRouterParam, setResponseHeaders } from "h3";
 import { getLatestJobEvent, subscribeJobEvents } from "~~/server/services/ingestionJobs";
 
-function writeEvent(res: any, event: string, data: unknown) {
+/**
+ * SSE 响应对象类型
+ */
+interface SSEResponse {
+  write: (data: string) => void;
+  flushHeaders?: () => void;
+  end: () => void;
+}
+
+function writeEvent(res: SSEResponse, event: string, data: unknown): void {
   res.write(`event: ${event}\n`);
   res.write(`data: ${JSON.stringify(data)}\n\n`);
 }
@@ -18,7 +27,7 @@ export default defineEventHandler(async (event) => {
     Connection: "keep-alive",
   });
 
-  const res = event.node.res;
+  const res = event.node.res as SSEResponse;
   const req = event.node.req;
   let closed = false;
 

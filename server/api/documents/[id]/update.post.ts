@@ -7,6 +7,7 @@ import {
 import { getDocumentById } from "~~/server/core/database";
 import { runIngestionJob } from "~~/server/services/ingestionJobs";
 import { runUploadIngestion, saveUploadFile } from "~~/server/ingestion/runUploadIngestion";
+import { isDocumentSourceType } from "~~/server/utils/typeGuards";
 import type { IngestionUploadType } from "~~/shared/ingestion";
 
 type FormPart = {
@@ -51,10 +52,11 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: "Missing multipart form data" });
   }
 
-  const type = readTextPart(parts, "type") as IngestionUploadType;
-  if (!type) {
-    throw createError({ statusCode: 400, statusMessage: "Missing type" });
+  const typeValue = readTextPart(parts, "type");
+  if (!isDocumentSourceType(typeValue)) {
+    throw createError({ statusCode: 400, statusMessage: "Invalid type, expected github|pdf|word" });
   }
+  const type: IngestionUploadType = typeValue;
 
   const ingestionJobId = `update-${id}-${Date.now()}`;
 
