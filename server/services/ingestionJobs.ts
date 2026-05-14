@@ -3,10 +3,23 @@ import type { IngestionJobEvent, IngestionJobStage } from "~~/shared/ingestion";
 
 type Listener = (event: IngestionJobEvent) => void;
 
-// 内存中的任务订阅中心：用于 SSE 实时推送上传进度。
+/**
+ * 内存中的任务订阅中心
+ * 
+ * 用于 SSE 实时推送上传进度，采用发布-订阅模式：
+ * - listeners: 存储每个任务的订阅者列表
+ * - latestEvents: 缓存每个任务的最新事件，供新订阅者获取
+ * 
+ * 注意：这是内存存储，服务重启后会丢失，但不影响功能
+ * 因为任务状态已持久化到数据库（documents.status 和 currentStage）
+ */
 const listeners = new Map<string, Set<Listener>>();
 const latestEvents = new Map<string, IngestionJobEvent>();
 
+/**
+ * 发送事件到所有订阅者
+ * 内部函数，由 publishJobEvent 调用
+ */
 function emit(event: IngestionJobEvent): void {
   latestEvents.set(event.ingestionJobId, event);
   const subs = listeners.get(event.ingestionJobId);
@@ -14,15 +27,30 @@ function emit(event: IngestionJobEvent): void {
   for (const sub of subs) sub(event);
 }
 
+/**
+ * 发布任务事件
+ * 将事件推送给所有订阅该任务的客户端（通过 SSE）
+ * 
+ * @param event - 任务事件，包含任务ID、阶段、进度等信息
+ */
 export function publishJobEvent(event: IngestionJobEvent): void {
   emit(event);
 }
 
+/**
+ * 订阅任务事件
+ * 用于 SSE 连接，客户端可实时接收任务进度更新
+ * 
+ * @param ingestionJobId - 任务 ID
+ * @param listener - 事件监听器函数
+ * @returns 取消订阅函数，调用后停止接收事件
+ */
 export function subscribeJobEvents(ingestionJobId: string, listener: Listener): () => void {
   const subs = listeners.get(ingestionJobId) || new Set<Listener>();
   subs.add(listener);
   listeners.set(ingestionJobId, subs);
 
+  // 返回取消订阅函数
   return () => {
     const current = listeners.get(ingestionJobId);
     if (!current) return;
@@ -31,6 +59,13 @@ export function subscribeJobEvents(ingestionJobId: string, listener: Listener): 
   };
 }
 
+/**
+ * 获取任务的最新事件
+ * 用于新订阅者获取当前进度，避免错过之前的事件
+ * 
+ * @param ingestionJobId - 任务 ID
+ * @returns 最新事件，如果任务不存在则返回 null
+ */
 export function getLatestJobEvent(ingestionJobId: string): IngestionJobEvent | null {
   return latestEvents.get(ingestionJobId) || null;
 }

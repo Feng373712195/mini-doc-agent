@@ -55,10 +55,32 @@ export async function saveUploadFile(input: {
   return filePath;
 }
 
-function hashBuffer(data: Buffer) {
+/**
+ * 计算 Buffer 的 SHA256 哈希值
+ * 用于检测文件内容是否变化
+ */
+function hashBuffer(data: Buffer): string {
   return crypto.createHash("sha256").update(data).digest("hex");
 }
 
+/**
+ * 执行文档上传摄取流程
+ * 
+ * 根据文档类型采用不同策略：
+ * - GitHub: 克隆仓库 -> 过滤文件 -> 分块 -> 嵌入 -> 索引
+ * - PDF/Word: 解析文件 -> 分块 -> 嵌入 -> 索引
+ * 
+ * 覆盖更新策略：先删除旧向量，再重建新向量，避免重复数据
+ * 
+ * @param params.type - 文档类型（github/pdf/word）
+ * @param params.documentId - 文档 ID
+ * @param params.repoUrl - GitHub 仓库地址（仅 github 类型需要）
+ * @param params.branch - Git 分支（仅 github 类型需要）
+ * @param params.filePath - 文件路径（仅 pdf/word 类型需要）
+ * @param params.fileBuffer - 文件数据（仅 pdf/word 类型需要）
+ * @param params.onStage - 阶段回调函数，用于推送进度事件
+ * @throws Error 如果文档不存在或缺少必要参数
+ */
 export async function runUploadIngestion(params: {
   type: IngestionUploadType;
   documentId: string;
@@ -67,18 +89,24 @@ export async function runUploadIngestion(params: {
   filePath?: string;
   fileBuffer?: Buffer;
   onStage?: (stage: "parsing" | "chunking" | "embedding" | "indexing", progress: number) => void;
-}) {
+}): Promise<void> {
   const document = getDocumentById(params.documentId);
   if (!document) throw new Error("document not found");
 
   const pipeline = new KnowledgeIngestionPipeline();
   const vectorStore = await getVectorStoreService();
-  // 覆盖重建策略：同 documentId 先删旧向量再重建
+  
+  // 覆盖重建策略：先删除旧向量，避免重复数据
+  // 同一个 documentId 的向量会被完全替换
   await vectorStore.deleteByDocumentId(params.documentId);
 
   if (params.type === "github") {
+    // GitHub 类型：通过 Git 克隆获取源码
+    // GitHubSource 会自动过滤白名单目录和文件类型
     const source = new GitHubSource(params.repoUrl || "", params.documentId, params.branch || null);
     const result = await pipeline.ingest(source, params.onStage);
+    
+    // 更新文档元数据：分支、提交哈希、分块数量
     updateDocument(params.documentId, {
       branch: result.documents[0]?.metadata.branch || null,
       commitHash: source.commitHash,
@@ -87,17 +115,23 @@ export async function runUploadIngestion(params: {
     return;
   }
 
+  // PDF/Word 类型：需要文件路径和 Buffer
   if (!params.filePath || !params.fileBuffer) {
     throw new Error("Missing uploaded file data");
   }
 
+  // 计算文件内容哈希，用于检测文件是否变化
   const contentHash = hashBuffer(params.fileBuffer);
+  
+  // 根据类型选择对应的数据源
   const source =
     params.type === "pdf"
       ? new PDFSource(params.filePath, params.documentId, document.sourcePath)
       : new WordSource(params.filePath, params.documentId, document.sourcePath);
 
   const result = await pipeline.ingest(source, params.onStage);
+  
+  // 更新文档元数据：内容哈希、分块数量
   updateDocument(params.documentId, {
     contentHash,
     chunkCount: result.chunks.length,
