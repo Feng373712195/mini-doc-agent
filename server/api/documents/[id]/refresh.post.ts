@@ -1,5 +1,6 @@
 import { createError, defineEventHandler, getRouterParam } from "h3";
 import { getDocumentById } from "~~/server/repositories/documentRepository";
+import { createSuccessResponse } from "~~/server/utils/response";
 import { runIngestionJob } from "~~/server/services/ingestionJobs";
 import { runUploadIngestion } from "~~/server/ingestion/runUploadIngestion";
 
@@ -63,29 +64,25 @@ export default defineEventHandler(async (event) => {
       console.error(`[refresh] Unexpected error in job ${ingestionJobId} for document ${id}:`, error);
     });
 
-    return {
-      code: 0,
-      message: "accepted",
-      data: {
+    return createSuccessResponse(
+      {
         documentId: id,
         mode: "background_refresh",
       },
-      timestamp: Date.now(),
-    };
+      "accepted"
+    );
   }
 
   // PDF/Word 类型：需要用户重新上传文件
   console.log(`[refresh] Document ${id} (${document.sourceType}) requires reupload`);
 
-  return {
-    code: 0,
-    message: "need_reupload",
-    data: {
+  return createSuccessResponse(
+    {
       documentId: id,
       mode: "need_reupload",
       sourceType: document.sourceType,
       title: document.title,
     },
-    timestamp: Date.now(),
-  };
+    "need_reupload"
+  );
 });

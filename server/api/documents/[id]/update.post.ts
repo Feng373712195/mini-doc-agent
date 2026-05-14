@@ -5,6 +5,7 @@ import {
   readMultipartFormData,
 } from "h3";
 import { getDocumentById } from "~~/server/repositories/documentRepository";
+import { createSuccessResponse } from "~~/server/utils/response";
 import { runIngestionJob } from "~~/server/services/ingestionJobs";
 import { runUploadIngestion, saveUploadFile } from "~~/server/ingestion/runUploadIngestion";
 import { isDocumentSourceType } from "~~/server/utils/typeGuards";
@@ -83,14 +84,9 @@ export default defineEventHandler(async (event) => {
       },
     });
 
-    return {
-      code: 0,
-      message: "accepted",
-      data: {
-        ingestionJobId,
-      },
-      timestamp: Date.now(),
-    };
+    return createSuccessResponse({
+      ingestionJobId,
+    }, "accepted");
   }
 
   // PDF/Word 类型：需要文件上传
@@ -121,12 +117,7 @@ export default defineEventHandler(async (event) => {
     },
   });
 
-  return {
-    code: 0,
-    message: "accepted",
-    data: {
-      ingestionJobId,
-    },
-    timestamp: Date.now(),
-  };
+  return createSuccessResponse({
+    ingestionJobId,
+  }, "accepted");
 });

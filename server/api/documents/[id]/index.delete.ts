@@ -4,6 +4,7 @@ import {
   getDocumentById,
   setDocumentStatus,
 } from "~~/server/repositories/documentRepository";
+import { createSuccessResponse } from "~~/server/utils/response";
 import { getVectorStoreService } from "~~/server/services/vectorStore";
 
 async function runDeleteDocument(documentId: string, previousStatus: "active" | "inactive" | "failed") {
@@ -38,13 +39,11 @@ export default defineEventHandler(async (event) => {
   // 删除流程异步执行，接口快速返回受理状态。
   void runDeleteDocument(id, previousStatus);
 
-  return {
-    code: 0,
-    message: "accepted",
-    data: {
+  return createSuccessResponse(
+    {
       documentId: id,
       status: "deleting",
     },
-    timestamp: Date.now(),
-  };
+    "accepted"
+  );
 });

@@ -1,6 +1,7 @@
 import { nanoid } from "nanoid";
 import { createError, defineEventHandler, readMultipartFormData } from "h3";
 import { createDocument } from "~~/server/repositories/documentRepository";
+import { createSuccessResponse } from "~~/server/utils/response";
 import { runIngestionJob } from "~~/server/services/ingestionJobs";
 import { runUploadIngestion, saveUploadFile } from "~~/server/ingestion/runUploadIngestion";
 import { isDocumentSourceType } from "~~/server/utils/typeGuards";
@@ -75,17 +76,12 @@ export default defineEventHandler(async (event): Promise<IngestionUploadResponse
       },
     });
 
-    return {
-      code: 0,
-      message: "accepted",
-      data: {
-        documentId: document.documentId,
-        ingestionJobId,
-        type,
-        createdAt: document.createdAt,
-      },
-      timestamp: Date.now(),
-    };
+    return createSuccessResponse({
+      documentId: document.documentId,
+      ingestionJobId,
+      type,
+      createdAt: document.createdAt,
+    }, "accepted");
   }
 
   const filePart = findPart(parts, "file");
@@ -124,15 +120,10 @@ export default defineEventHandler(async (event): Promise<IngestionUploadResponse
     },
   });
 
-  return {
-    code: 0,
-    message: "accepted",
-    data: {
-      documentId: document.documentId,
-      ingestionJobId,
-      type,
-      createdAt: document.createdAt,
-    },
-    timestamp: Date.now(),
-  };
+  return createSuccessResponse({
+    documentId: document.documentId,
+    ingestionJobId,
+    type,
+    createdAt: document.createdAt,
+  }, "accepted");
 });

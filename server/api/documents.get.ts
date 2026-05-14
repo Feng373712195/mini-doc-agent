@@ -1,5 +1,6 @@
 ﻿import { createError, defineEventHandler, getQuery } from "h3";
 import { listDocuments } from "~~/server/repositories/documentRepository";
+import { createSuccessResponse } from "~~/server/utils/response";
 import type { DocumentStatus } from "~~/shared/document";
 
 const ALLOWED_STATUS = new Set<DocumentStatus | "all">([
@@ -23,17 +24,12 @@ export default defineEventHandler((event) => {
   }
 
   const result = listDocuments({ page, pageSize, status });
-  return {
-    code: 0,
-    message: "ok",
-    data: {
-      items: result.items,
-      pagination: {
-        page,
-        pageSize,
-        total: result.total,
-      },
+  return createSuccessResponse({
+    items: result.items,
+    pagination: {
+      page,
+      pageSize,
+      total: result.total,
     },
-    timestamp: Date.now(),
-  };
+  });
 });
