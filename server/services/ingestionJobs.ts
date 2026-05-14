@@ -7,14 +7,14 @@ type Listener = (event: IngestionJobEvent) => void;
 const listeners = new Map<string, Set<Listener>>();
 const latestEvents = new Map<string, IngestionJobEvent>();
 
-function emit(event: IngestionJobEvent) {
+function emit(event: IngestionJobEvent): void {
   latestEvents.set(event.ingestionJobId, event);
   const subs = listeners.get(event.ingestionJobId);
   if (!subs) return;
   for (const sub of subs) sub(event);
 }
 
-export function publishJobEvent(event: IngestionJobEvent) {
+export function publishJobEvent(event: IngestionJobEvent): void {
   emit(event);
 }
 
@@ -35,19 +35,35 @@ export function getLatestJobEvent(ingestionJobId: string): IngestionJobEvent | n
   return latestEvents.get(ingestionJobId) || null;
 }
 
+/**
+ * 运行文档摄取任务
+ * 
+ * 统一管理任务的生命周期：
+ * 1. 设置初始状态（processing + queued）
+ * 2. 执行任务并推送进度事件
+ * 3. 成功时更新为 active + completed
+ * 4. 失败时更新为 failed 并记录错误
+ * 
+ * @param params.ingestionJobId - 任务 ID，用于 SSE 事件订阅
+ * @param params.documentId - 文档 ID
+ * @param params.task - 实际执行的任务函数，接收 emitStage 回调
+ */
 export async function runIngestionJob(params: {
   ingestionJobId: string;
   documentId: string;
   task: (emitStage: (stage: IngestionJobStage, progress: number, message?: string) => void) => Promise<void>;
-}) {
+}): Promise<void> {
   const { ingestionJobId, documentId, task } = params;
 
-  // 统一阶段回调：推送事件 + 落库 currentStage，避免前端强依赖 SSE。
-  const emitStage = (stage: IngestionJobStage, progress: number, message?: string) => {
-    updateDocument(documentId, {
-      currentStage: stage,
-      ...(stage === "queued" ? { status: "processing", errorMessage: null } : {}),
-    });
+  /**
+   * 阶段回调：推送 SSE 事件 + 更新数据库状态
+   * 只在关键阶段更新数据库，减少 I/O
+   */
+  const emitStage = (stage: IngestionJobStage, progress: number, message?: string): void => {
+    // 只在关键阶段更新数据库 currentStage
+    if (["queued", "parsing", "chunking", "embedding", "indexing", "completed", "failed"].includes(stage)) {
+      updateDocument(documentId, { currentStage: stage });
+    }
 
     const event: IngestionJobEvent = {
       ingestionJobId,
@@ -65,12 +81,18 @@ export async function runIngestionJob(params: {
   };
 
   try {
-    // 文档主状态保持粗粒度：处理中 -> 成功/失败。
-    setDocumentStatus(documentId, "processing");
+    // 统一设置初始状态，避免重复更新
+    updateDocument(documentId, {
+      status: "processing",
+      currentStage: "queued",
+      errorMessage: null,
+    });
     emitStage("queued", 0, "queued");
 
+    // 执行实际的摄取任务
     await task(emitStage);
 
+    // 成功：标记为 active，记录完成时间
     emitStage("completed", 100, "completed");
     updateDocument(documentId, {
       status: "active",
@@ -79,7 +101,10 @@ export async function runIngestionJob(params: {
       errorMessage: null,
     });
   } catch (error) {
+    // 失败：标记为 failed，记录错误信息供用户排查
     const message = error instanceof Error ? error.message : "ingestion failed";
+    console.error(`[runIngestionJob] Job ${ingestionJobId} failed for document ${documentId}:`, error);
+    
     emitStage("failed", 100, message);
     updateDocument(documentId, {
       status: "failed",
