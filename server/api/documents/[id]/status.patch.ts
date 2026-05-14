@@ -1,5 +1,5 @@
 ﻿import { createError, defineEventHandler, getRouterParam, readBody } from "h3";
-import { getDocumentById, updateDocument } from "~~/server/core/database";
+import { getDocumentById, updateDocument } from "~~/server/repositories/documentRepository";
 import type { DocumentStatus } from "~~/shared/document";
 
 type Body = {

@@ -5,7 +5,7 @@ import { KnowledgeIngestionPipeline } from "~~/server/ingestion/pipeline/Knowled
 import { GitHubSource } from "~~/server/ingestion/sources/GitHubSource";
 import { PDFSource } from "~~/server/ingestion/sources/PDFSource";
 import { WordSource } from "~~/server/ingestion/sources/WordSource";
-import { getDocumentById, updateDocument } from "~~/server/core/database";
+import { getDocumentById, updateDocument } from "~~/server/repositories/documentRepository";
 import { getVectorStoreService } from "~~/server/services/vectorStore";
 import type { IngestionUploadType } from "~~/shared/ingestion";
 

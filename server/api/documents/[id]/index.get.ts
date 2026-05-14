@@ -1,5 +1,5 @@
 ﻿import { createError, defineEventHandler, getRouterParam } from "h3";
-import { getDocumentById } from "~~/server/core/database";
+import { getDocumentById } from "~~/server/repositories/documentRepository";
 
 export default defineEventHandler((event) => {
   const id = getRouterParam(event, "id");

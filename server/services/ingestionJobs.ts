@@ -1,4 +1,4 @@
-﻿import { setDocumentStatus, updateDocument } from "~~/server/core/database";
+﻿import { setDocumentStatus, updateDocument } from "~~/server/repositories/documentRepository";
 import type { IngestionJobEvent, IngestionJobStage } from "~~/shared/ingestion";
 
 type Listener = (event: IngestionJobEvent) => void;

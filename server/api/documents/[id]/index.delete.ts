@@ -3,7 +3,7 @@ import {
   deleteDocumentById,
   getDocumentById,
   setDocumentStatus,
-} from "~~/server/core/database";
+} from "~~/server/repositories/documentRepository";
 import { getVectorStoreService } from "~~/server/services/vectorStore";
 
 async function runDeleteDocument(documentId: string, previousStatus: "active" | "inactive" | "failed") {

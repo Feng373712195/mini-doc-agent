@@ -1,6 +1,6 @@
 import { nanoid } from "nanoid";
 import { createError, defineEventHandler, readMultipartFormData } from "h3";
-import { createDocument } from "~~/server/core/database";
+import { createDocument } from "~~/server/repositories/documentRepository";
 import { runIngestionJob } from "~~/server/services/ingestionJobs";
 import { runUploadIngestion, saveUploadFile } from "~~/server/ingestion/runUploadIngestion";
 import { isDocumentSourceType } from "~~/server/utils/typeGuards";

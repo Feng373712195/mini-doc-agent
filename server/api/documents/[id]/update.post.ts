@@ -4,7 +4,7 @@ import {
   getRouterParam,
   readMultipartFormData,
 } from "h3";
-import { getDocumentById } from "~~/server/core/database";
+import { getDocumentById } from "~~/server/repositories/documentRepository";
 import { runIngestionJob } from "~~/server/services/ingestionJobs";
 import { runUploadIngestion, saveUploadFile } from "~~/server/ingestion/runUploadIngestion";
 import { isDocumentSourceType } from "~~/server/utils/typeGuards";

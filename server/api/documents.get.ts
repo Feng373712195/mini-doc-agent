@@ -1,5 +1,5 @@
 ﻿import { createError, defineEventHandler, getQuery } from "h3";
-import { getDocumentById, listDocuments } from "~~/server/core/database";
+import { listDocuments } from "~~/server/repositories/documentRepository";
 import type { DocumentStatus } from "~~/shared/document";
 
 const ALLOWED_STATUS = new Set<DocumentStatus | "all">([
