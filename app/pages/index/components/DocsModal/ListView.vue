@@ -15,7 +15,7 @@
               type="link"
               size="small"
               :disabled="isBusy(record.statusRaw)"
-              @click="toggleStatus(record)"
+              @click="handleToggleStatus(record)"
             >
               {{ record.statusRaw === "active" ? "停用" : "启用" }}
             </a-button>
@@ -32,7 +32,7 @@
                   <a-menu-item key="refresh" @click="handleRefresh(record)">
                     更新
                   </a-menu-item>
-                  <a-menu-item key="delete" @click="confirmDelete(record)">
+                  <a-menu-item key="delete" @click="handleDelete(record)">
                     删除
                   </a-menu-item>
                 </a-menu>
@@ -48,7 +48,7 @@
     <a-modal
       v-model:open="deleteModalVisible"
       title="确认删除"
-      @ok="handleDelete"
+      @ok="deleteDocument"
       :confirmLoading="actionLoading"
     >
       <p>
@@ -61,7 +61,7 @@
     <a-modal
       v-model:open="refreshModalVisible"
       title="确认更新"
-      @ok="handleRefreshConfirm"
+      @ok="refreshDocument"
       :confirmLoading="actionLoading"
     >
       <p>
@@ -75,20 +75,16 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
-import { message } from "ant-design-vue";
 import { DownOutlined } from "@ant-design/icons-vue";
 import DetailView from "./DetailView.vue";
 import type { DocumentRecord, DocumentSourceType } from "~~/shared/document";
-import type {
-  DocumentStatusToggleResponse,
-  DocumentRefreshResponse,
-} from "~~/shared/api";
 import {
   DOCUMENT_STATUS_LABELS,
   DOCUMENT_SOURCE_TYPE_LABELS,
 } from "~~/shared/constants/document";
 import { formatDateTime } from "~~/app/utils/date";
 import { useDocumentList } from "./composables/useDocumentList";
+import { useDocumentActions } from "./composables/useDocumentActions";
 
 const emit = defineEmits<{
   "need-reupload": [
@@ -142,13 +138,27 @@ const {
   refreshFirstPage,
 } = useDocumentList();
 
-const actionLoading = ref(false);
+// 使用文档操作逻辑 composable
+const {
+  actionLoading,
+  deleteModalVisible,
+  refreshModalVisible,
+  deleteTarget,
+  refreshTarget,
+  toggleStatus,
+  confirmDelete,
+  deleteDocument,
+  confirmRefresh,
+  refreshDocument,
+} = useDocumentActions({
+  onRefreshNeeded: fetchDocuments,
+  onNeedReupload: (documentId, sourceType, title) => {
+    emit("need-reupload", documentId, sourceType, title);
+  },
+});
+
 const detailModalVisible = ref(false);
-const deleteModalVisible = ref(false);
-const refreshModalVisible = ref(false);
 const selectedDoc = ref<DocumentRecord | null>(null);
-const deleteTarget = ref<DocumentRecord | null>(null);
-const refreshTarget = ref<DocumentRecord | null>(null);
 
 const tableData = computed(() =>
   documents.value.map((doc) => ({
@@ -183,38 +193,17 @@ function isBusy(status: string): boolean {
   return ["uploading", "processing", "deleting"].includes(status);
 }
 
-watch(
-  () => documents.value.length,
-  () => {
-    if (documents.value.length === 0 && total.value > 0) {
-      currentPage.value = 1;
-      fetchDocuments();
-    }
-  },
-);
-
-async function toggleStatus(record: (typeof tableData.value)[0]) {
-  const newStatus = record.statusRaw === "active" ? "inactive" : "active";
-  try {
-    const response = await $fetch<DocumentStatusToggleResponse>(
-      `/api/documents/${record.documentId}/status`,
-      {
-        method: "PATCH",
-        body: { status: newStatus },
-      },
-    );
-    if (response.code === 0) {
-      message.success(newStatus === "active" ? "已启用" : "已停用");
-      fetchDocuments();
-    } else {
-      message.error(response.message || "操作失败");
-    }
-  } catch (error) {
-    message.error("操作失败");
-  }
+/**
+ * 处理状态切换（启用/停用）
+ */
+function handleToggleStatus(record: (typeof tableData.value)[0]): void {
+  toggleStatus(record.documentId, record.statusRaw);
 }
 
-function showDetail(record: (typeof tableData.value)[0]) {
+/**
+ * 显示文档详情
+ */
+function showDetail(record: (typeof tableData.value)[0]): void {
   const originalDoc = documents.value.find(
     (d) => d.documentId === record.documentId,
   );
@@ -224,80 +213,35 @@ function showDetail(record: (typeof tableData.value)[0]) {
   }
 }
 
-function confirmDelete(record: (typeof tableData.value)[0]) {
-  deleteTarget.value =
-    documents.value.find((d) => d.documentId === record.documentId) || null;
-  deleteModalVisible.value = true;
+/**
+ * 处理删除操作
+ */
+function handleDelete(record: (typeof tableData.value)[0]): void {
+  const doc = documents.value.find((d) => d.documentId === record.documentId);
+  if (doc) {
+    confirmDelete(doc);
+  }
 }
 
-async function handleDelete() {
-  if (!deleteTarget.value) return;
-  actionLoading.value = true;
-  try {
-    const response = await $fetch<{ code: number; message: string }>(
-      `/api/documents/${deleteTarget.value.documentId}`,
-      {
-        method: "DELETE",
-      },
-    );
-    if (response.code === 0) {
-      message.success("删除成功");
-      deleteModalVisible.value = false;
-      deleteTarget.value = null;
+/**
+ * 处理刷新操作
+ */
+function handleRefresh(record: (typeof tableData.value)[0]): void {
+  const doc = documents.value.find((d) => d.documentId === record.documentId);
+  if (doc) {
+    confirmRefresh(doc);
+  }
+}
+
+watch(
+  () => documents.value.length,
+  () => {
+    if (documents.value.length === 0 && total.value > 0) {
+      currentPage.value = 1;
       fetchDocuments();
-    } else {
-      message.error(response.message || "删除失败");
     }
-  } catch (error) {
-    message.error("删除失败");
-  } finally {
-    actionLoading.value = false;
-  }
-}
-
-function handleRefresh(record: (typeof tableData.value)[0]) {
-  refreshTarget.value =
-    documents.value.find((d) => d.documentId === record.documentId) || null;
-  refreshModalVisible.value = true;
-}
-
-async function handleRefreshConfirm() {
-  if (!refreshTarget.value) return;
-  actionLoading.value = true;
-  try {
-    const response = await $fetch<DocumentRefreshResponse>(
-      `/api/documents/${refreshTarget.value.documentId}/refresh`,
-      {
-        method: "POST",
-      },
-    );
-    if (response.code === 0) {
-      refreshModalVisible.value = false;
-      refreshTarget.value = null;
-      if (response.data.mode === "background_refresh") {
-        message.success("已开始更新，请稍候");
-        fetchDocuments();
-      } else if (
-        response.data.mode === "need_reupload" &&
-        response.data.sourceType &&
-        response.data.title
-      ) {
-        emit(
-          "need-reupload",
-          response.data.documentId!,
-          response.data.sourceType,
-          response.data.title,
-        );
-      }
-    } else {
-      message.error(response.message || "更新失败");
-    }
-  } catch (error) {
-    message.error("更新失败");
-  } finally {
-    actionLoading.value = false;
-  }
-}
+  },
+);
 
 // 初始化时加载数据
 fetchDocuments();
