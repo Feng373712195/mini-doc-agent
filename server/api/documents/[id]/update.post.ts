@@ -2,12 +2,28 @@ import {
   createError,
   defineEventHandler,
   getRouterParam,
-  readFormData,
+  readMultipartFormData,
 } from "h3";
-import { getDocumentById, setDocumentStatus } from "~~/server/core/database";
+import { getDocumentById } from "~~/server/core/database";
 import { runIngestionJob } from "~~/server/services/ingestionJobs";
-import { runUploadIngestion } from "~~/server/ingestion/runUploadIngestion";
-import type { IngestionUploadType } from "~~/server/ingestion/runUploadIngestion";
+import { runUploadIngestion, saveUploadFile } from "~~/server/ingestion/runUploadIngestion";
+import type { IngestionUploadType } from "~~/shared/ingestion";
+
+type FormPart = {
+  name?: string;
+  data?: Buffer;
+  filename?: string;
+};
+
+function findPart(parts: FormPart[], name: string): FormPart | undefined {
+  return parts.find((part) => part.name === name);
+}
+
+function readTextPart(parts: FormPart[], name: string): string | undefined {
+  const part = findPart(parts, name);
+  if (!part?.data) return undefined;
+  return part.data.toString("utf8").trim();
+}
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, "id");
@@ -30,13 +46,64 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const formData = await readFormData(event);
-  const type = formData.get("type") as IngestionUploadType;
+  const parts = (await readMultipartFormData(event)) as FormPart[] | undefined;
+  if (!parts || parts.length === 0) {
+    throw createError({ statusCode: 400, statusMessage: "Missing multipart form data" });
+  }
+
+  const type = readTextPart(parts, "type") as IngestionUploadType;
   if (!type) {
     throw createError({ statusCode: 400, statusMessage: "Missing type" });
   }
 
   const ingestionJobId = `update-${id}-${Date.now()}`;
+
+  // GitHub 类型：只需要 repoUrl 和 branch
+  if (type === "github") {
+    const repoUrl = readTextPart(parts, "repoUrl");
+    const branch = readTextPart(parts, "branch") || null;
+
+    if (!repoUrl) {
+      throw createError({ statusCode: 400, statusMessage: "Missing repoUrl for GitHub update" });
+    }
+
+    void runIngestionJob({
+      ingestionJobId,
+      documentId: id,
+      task: async (emitStage) => {
+        await runUploadIngestion({
+          type: "github",
+          documentId: id,
+          repoUrl,
+          branch,
+          onStage: (stage, progress) => emitStage(stage, progress, stage),
+        });
+      },
+    });
+
+    return {
+      code: 0,
+      message: "accepted",
+      data: {
+        ingestionJobId,
+      },
+      timestamp: Date.now(),
+    };
+  }
+
+  // PDF/Word 类型：需要文件上传
+  const filePart = findPart(parts, "file");
+  if (!filePart?.filename || !filePart?.data) {
+    throw createError({ statusCode: 400, statusMessage: "Missing file for PDF/Word update" });
+  }
+
+  const filePath = await saveUploadFile({
+    ingestionJobId,
+    filename: filePart.filename,
+    data: filePart.data,
+  });
+
+  const fileBuffer = filePart.data;
 
   void runIngestionJob({
     ingestionJobId,
@@ -45,11 +112,9 @@ export default defineEventHandler(async (event) => {
       await runUploadIngestion({
         type,
         documentId: id,
-        repoUrl: formData.get("repoUrl") as string | undefined,
-        branch: formData.get("branch") as string | undefined,
-        file: formData.get("file") as File | undefined,
-        onStage: (stage, progress, message) =>
-          emitStage(stage, progress, message),
+        filePath,
+        fileBuffer,
+        onStage: (stage, progress) => emitStage(stage, progress, stage),
       });
     },
   });

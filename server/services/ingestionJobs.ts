@@ -49,14 +49,19 @@ export async function runIngestionJob(params: {
       ...(stage === "queued" ? { status: "processing", errorMessage: null } : {}),
     });
 
-    publishJobEvent({
+    const event: IngestionJobEvent = {
       ingestionJobId,
       documentId,
       stage,
       progress,
-      message,
       at: Date.now(),
-    });
+    };
+    
+    if (message !== undefined) {
+      event.message = message;
+    }
+    
+    publishJobEvent(event);
   };
 
   try {

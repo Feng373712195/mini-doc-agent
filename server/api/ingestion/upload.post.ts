@@ -107,6 +107,8 @@ export default defineEventHandler(async (event): Promise<IngestionUploadResponse
     data: filePart.data,
   });
 
+  const fileBuffer = filePart.data;
+
   void runIngestionJob({
     ingestionJobId,
     documentId: document.documentId,
@@ -116,7 +118,7 @@ export default defineEventHandler(async (event): Promise<IngestionUploadResponse
         type,
         documentId: document.documentId,
         filePath,
-        fileBuffer: filePart.data,
+        fileBuffer,
         onStage: (stage, progress) => emitStage(stage, progress, stage),
       });
     },

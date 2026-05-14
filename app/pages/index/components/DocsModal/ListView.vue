@@ -78,30 +78,15 @@ import { ref, computed, watch } from "vue";
 import { message } from "ant-design-vue";
 import { DownOutlined } from "@ant-design/icons-vue";
 import DetailView from "./DetailView.vue";
+import type { DocumentRecord, DocumentStatus, DocumentSourceType } from "~~/shared/document";
 
 const emit = defineEmits<{
   "need-reupload": [
     documentId: string,
-    sourceType: "github" | "pdf" | "word",
+    sourceType: DocumentSourceType,
     title: string,
   ];
 }>();
-
-interface DocumentRecord {
-  documentId: string;
-  title: string;
-  sourceType: "github" | "pdf" | "word";
-  sourcePath: string | null;
-  repo: string | null;
-  branch: string | null;
-  status: string;
-  currentStage: string | null;
-  chunkCount: number;
-  errorMessage: string | null;
-  createdAt: number;
-  updatedAt: number;
-  lastIngestedAt: number | null;
-}
 
 interface ApiResponse {
   code: number;
@@ -133,7 +118,7 @@ interface RefreshResponse {
   data: {
     mode: "background_refresh" | "need_reupload";
     documentId?: string;
-    sourceType?: "github" | "pdf" | "word";
+    sourceType?: DocumentSourceType;
     title?: string;
   };
   timestamp: number;
@@ -381,16 +366,17 @@ async function handleRefreshConfirm() {
   }
 }
 
-fetchDocuments();
-
-defineExpose({
-  refresh: fetchDocuments,
-});
-
 async function refreshFirstPage() {
   currentPage.value = 1;
   await fetchDocuments();
 }
+
+fetchDocuments();
+
+defineExpose({
+  refresh: fetchDocuments,
+  refreshFirstPage,
+});
 </script>
 
 <style lang="less" scoped>

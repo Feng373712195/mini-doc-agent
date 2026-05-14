@@ -9,5 +9,14 @@ export default defineEventHandler((event) => {
   const limit = q.limit ? Number(q.limit) : 50;
   const before = q.before ? Number(q.before) : undefined;
 
-  return getMessagesPage({ conversationId: id, limit, beforeCreatedAt: before });
+  const params: { conversationId: string; limit: number; beforeCreatedAt?: number } = {
+    conversationId: id,
+    limit,
+  };
+  
+  if (before !== undefined) {
+    params.beforeCreatedAt = before;
+  }
+
+  return getMessagesPage(params);
 });

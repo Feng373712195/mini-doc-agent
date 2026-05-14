@@ -26,7 +26,9 @@ class OpenAICompatEmbeddings implements EmbeddingsInterface {
     this.apiKey = options.apiKey;
     this.model = options.model;
     this.baseUrl = options.baseUrl;
-    this.dimensions = options.dimensions;
+    if (options.dimensions !== undefined) {
+      this.dimensions = options.dimensions;
+    }
   }
 
   async embedQuery(text: string): Promise<number[]> {
@@ -91,10 +93,15 @@ export function createEmbeddings(): EmbeddingsInterface {
   if (!embeddingModel) throw new Error("Missing EMBEDDING_MODEL");
   if (!embeddingBaseUrl) throw new Error("Missing EMBEDDING_BASE_URL");
 
-  return new OpenAICompatEmbeddings({
+  const config: { apiKey: string; model: string; baseUrl: string; dimensions?: number } = {
     apiKey: String(embeddingApiKey),
     model: String(embeddingModel),
     baseUrl: String(embeddingBaseUrl),
-    dimensions: embeddingDimensions,
-  });
+  };
+  
+  if (embeddingDimensions !== undefined) {
+    config.dimensions = embeddingDimensions;
+  }
+
+  return new OpenAICompatEmbeddings(config);
 }

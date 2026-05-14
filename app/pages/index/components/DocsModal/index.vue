@@ -91,7 +91,7 @@ function onUploadCompleted() {
   uploadType.value = null;
   updateMode.value = null;
   viewHistory.value = ["list"];
-  listViewRef.value?.refresh();
+  listViewRef.value?.refreshFirstPage();
 }
 
 function onCancel() {
